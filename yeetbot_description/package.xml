@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>yeetbot_description</name>
+  <version>0.0.0</version>
+  <description>The yeetbot_description package.</description>
+
+  <maintainer email="nrh16@ic.ac.uk">Nick Hafner</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+</package>

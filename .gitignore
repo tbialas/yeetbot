@@ -1,0 +1,11 @@
+# Nick is bad at VIM
+*.swp
+
+# Cheeky bag files
+*.bag
+
+# ROS // Python stuff
+*.pyc
+*.pcd
+srv/_*.py
+msg/_*.py
