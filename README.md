@@ -7,7 +7,7 @@ Github repository for our group for the 4th year Human Centred Robotics course a
 - Tomasz Białas (tjb16)
 - Nick Hafner (nrh16)
 - Ben Mark (bm16)
-- Tom Poskitt (tp16)
+- Tom Poskitt (tjp16)
 - Archit Sharma (as10216)
 - Sergey Zhelyabovskiy (sz16)
 
