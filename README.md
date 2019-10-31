@@ -4,12 +4,12 @@
 Github repository for our group for the 4th year Human Centred Robotics course at Imperial College London (EEE Dept.)
 
 ### Team Members
-- Tomasz Białas
-- Nick Hafner
-- Ben Mark
-- Tom Poskitt
-- Archit Sharma
-- Sergey Zhelyabovskiy
+- Tomasz Białas (tjb16)
+- Nick Hafner (nrh16)
+- Ben Mark (bm16)
+- Tom Poskitt (tp16)
+- Archit Sharma (as10216)
+- Sergey Zhelyabovskiy (sz16)
 
 ## Robot Purpose
 
