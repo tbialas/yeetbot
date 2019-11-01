@@ -6,10 +6,10 @@ Github repository for our group for the 4th year Human Centred Robotics course a
 ### Team Members
 - Tomasz Białas (tjb16)
 - Nick Hafner (nrh16)
-- Ben Mark (bm16)
+- Ben Mark (bb2515)
 - Tom Poskitt (tjp16)
 - Archit Sharma (as10216)
-- Sergey Zhelyabovskiy (sz16)
+- Sergey Zhelyabovskiy (sz4316)
 
 ## Robot Purpose
 

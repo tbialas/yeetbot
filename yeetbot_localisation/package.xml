@@ -4,7 +4,7 @@
   <version>0.0.0</version>
   <description>The yeetbot_localisation package contains code to localise YEETBot3000 within ICRS's lab, as well as locate and track people within ICRS's lab.</description>
 
-  <maintainer email="bm16@ic.ac.uk">Ben Mark</maintainer>
+  <maintainer email="bb2515@ic.ac.uk">Ben Mark</maintainer>
   <maintainer email="tjb16@ic.ac.uk">Tomasz Białas</maintainer>
   <license>MIT</license>
 
