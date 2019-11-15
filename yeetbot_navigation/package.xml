@@ -1,12 +1,28 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>yeetbot_navigation</name>
-  <version>0.0.0</version>
+  <version>0.0.1</version>
   <description>The yeetbot_navigation package contains the navigation pipeline for YEETBot3000</description>
 
-  <maintainer email="sz4316@ic.ac.uk">Sergey Zhelyabovskiy</maintainer>
+  <maintainer email="bb2515@ic.ac.uk">Benjamin Biggs</maintainer>
   <license>MIT</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <depend>move_base</depend>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>urdf</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>geometry_msgs</build_depend>
+  <build_depend>robot_state_publisher</build_depend>
+
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>std_msgs</exec_depend>
+
 </package>
