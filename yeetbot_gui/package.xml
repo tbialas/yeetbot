@@ -9,5 +9,6 @@
   
   <buildtool_depend>catkin</buildtool_depend>
   <depend>rospy</depend>
+  <depend>yeetbot_msgs</depend>
   <exec_depend>python-rospkg</exec_depend>
 </package>
