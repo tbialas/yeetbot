@@ -6,10 +6,10 @@ import Tkinter
 from yeetbot_gui.app import App
 
 def main():
+    rospy.init_node("GUI")
+
     root = Tkinter.Tk()
     app = App(master=root)
-
-    rospy.init_node("GUI")
 
     try:
         app.mainloop()

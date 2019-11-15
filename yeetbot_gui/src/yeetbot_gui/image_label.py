@@ -11,7 +11,7 @@ from itertools import count
 
 class ImageLabel(tk.Label):
     """a label that displays images, and plays them if they are gifs"""
-    def load(self, im):
+    def load(self, im, sf):
         if isinstance(im, str):
             im = Image.open(im)
         self.loc = 0
@@ -19,6 +19,7 @@ class ImageLabel(tk.Label):
 
         try:
             for i in count(1):
+                im.thumbnail((im.size[0]*sf, im.size[1]*sf), Image.ANTIALIAS)
                 self.frames.append(ImageTk.PhotoImage(im.copy()))
                 im.seek(i)
         except EOFError:
@@ -28,6 +29,9 @@ class ImageLabel(tk.Label):
             self.delay = im.info['duration']
         except:
             self.delay = 100
+
+        if self.delay == 0:
+            self.delay = int(1000/24)
 
         if len(self.frames) == 1:
             self.config(image=self.frames[0])
