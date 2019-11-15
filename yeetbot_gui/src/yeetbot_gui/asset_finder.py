@@ -9,7 +9,13 @@ class AssetFinder:
         self.__path = os.path.join(self.__path, 'assets')
         self.__asset_map = {}
         
-        self.find_asset('test', 'test.gif')
+        self.find_asset('angry'       , 'toolbot_angry.gif'       )
+        self.find_asset('dab'         , 'toolbot_dab.gif'         )
+        self.find_asset('idle'        , 'toolbot_idle.gif'        )
+        self.find_asset('idle_to_wave', 'toolbot_idle_to_wave.gif')
+        self.find_asset('wave'        , 'toolbot_wave.gif'        )
+        self.find_asset('jump'        , 'toolbot_happy_jump.gif'  )
+        self.find_asset('kawaii'      , 'toolbot_kawaii.gif'      )
 
     def find_asset(self, name, file_name):
         if name in self.__asset_map.keys():
