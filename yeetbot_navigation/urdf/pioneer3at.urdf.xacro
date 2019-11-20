@@ -167,7 +167,7 @@ name="pioneer3at">
 	</joint>
 
 <!-- Kinect Depth Sensor  -->
-     <link name="kinect_link">
+     <link name="camera_link">
           <visual>
             <geometry>
               <box size="0.064 0.121 0.0381" />
@@ -182,13 +182,13 @@ name="pioneer3at">
                        izz="0.0001" />
           </inertial>
         </link> 
-        <joint name="base_kinect_joint" type="fixed">
+        <joint name="base_camera_joint" type="fixed">
                 <origin xyz="0.2 0 1.193" rpy="0 0 0"/>
                 <parent link="base_link"/>
-                <child link="kinect_link"/>
+                <child link="camera_link"/>
         </joint>
  
-        <link name="kinect_depth_frame">
+        <link name="camera_depth_frame">
           <inertial>
               <mass value="0.0001" />
               <origin xyz="0 0 0" />
@@ -197,14 +197,14 @@ name="pioneer3at">
                        izz="0.0001" />
           </inertial>
         </link>
-        <joint name="kinect_depth_joint" type="fixed">
+        <joint name="camera_depth_joint" type="fixed">
           <origin xyz="0 0.028 0" rpy="0 0 0" />
-          <parent link="kinect_link" />
-          <child link="kinect_depth_frame" /> 
+          <parent link="camera_link" />
+          <child link="camera_depth_frame" /> 
         </joint> 
  
 
-        <link name="kinect_depth_optical_frame">
+        <link name="camera_depth_optical_frame">
           <inertial>
               <mass value="0.0001" />
               <origin xyz="0 0 0" />
@@ -215,8 +215,8 @@ name="pioneer3at">
         </link> 
         <joint name="depth_optical_joint" type="fixed">
           <origin xyz="0 0 0" rpy="${pi/2} 0 ${pi/2}" />
-          <parent link="kinect_depth_frame" />
-          <child link="kinect_depth_optical_frame" />
+          <parent link="camera_depth_frame" />
+          <child link="camera_depth_optical_frame" />
         </joint>
 
 <!-- Hokuyo LIDAR -->
@@ -233,7 +233,7 @@ name="pioneer3at">
                 <parent link="base_link"/>
                 <child link="lidar_link"/>
         </joint>
-	<link name="beam_link">
+	<link name="laser">
           <inertial>
               <mass value="0.0001" />
               <origin xyz="0 0 0" />
@@ -242,10 +242,10 @@ name="pioneer3at">
                        izz="0.0001" />
           </inertial>   
 	</link>
-        <joint name="lidar_beam_joint" type="fixed">
+        <joint name="lidar_laser_joint" type="fixed">
                 <origin xyz="0 0 -0.0225" rpy="${pi} 0 0"/>
                 <parent link="lidar_link"/>
-                <child link="beam_link"/>
+                <child link="laser"/>
         </joint>
 
 <xacro:macro name="p3at_drive_side" params="side reflect">
