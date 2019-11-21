@@ -103,7 +103,7 @@ class App(Canvas):
         self.speech_label.place()
 
     def __init__(self, master=None):
-        Canvas.__init__(self, master, width=1920, height=1080, bd=0)
+        Canvas.__init__(self, master, width=1600, height=2560, bd=0)
         self.pack()
         self.last_state = None
         self.__assets = AssetFinder()
