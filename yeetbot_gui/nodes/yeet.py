@@ -2,7 +2,8 @@
 import rospy
 from std_msgs.msg import String
 
-import Tkinter
+from PyQt4 import QtGui
+import sys
 
 from yeetbot_gui.app import App
 from yeetbot_msgs.msg import YEETBotState, YEETBotUserResponse, YEETBotUserChoices
@@ -10,8 +11,9 @@ from yeetbot_msgs.msg import YEETBotState, YEETBotUserResponse, YEETBotUserChoic
 def main():
     rospy.init_node("GUI")
 
-    root = Tkinter.Tk()
-    app = App(master=root)
+    root = QtGui.QApplication(sys.argv)
+
+    app = App()
 
     def speech_text_cb(text_msg):
         app.write_yeetbot_speech(text_msg.data)
@@ -30,16 +32,7 @@ def main():
 
     timer = rospy.Timer(rospy.Duration(3), state_swap_cb)
 
-    try:
-        app.mainloop()
-    except rospy.exceptions.ROSException:
-        pass
-
-    try:
-        root.destroy()
-        root.update()
-    except Tkinter._tkinter.TclError:
-        pass
+    root.exec_()
 
 if __name__ == '__main__':
     main()

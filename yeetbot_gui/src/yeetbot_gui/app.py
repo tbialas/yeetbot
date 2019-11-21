@@ -1,44 +1,49 @@
-from Tkinter import *
+from PyQt4 import QtGui, QtCore
 
 from yeetbot_gui.asset_finder import AssetFinder
-from yeetbot_gui.image_label import ImageLabel
 
 
-class App(Canvas):
+class App(QtGui.QMainWindow):
     def write_yeetbot_speech(self, text):
-        self.speech_bubble.place(x=86, y=629)
-        self.speech_label_text.set(text)
-        self.speech_label.place(relx=0.5, rely=0.41, anchor=CENTER)
+        self.speech_bubble.move(86, 629)
+        self.speech_bubble.show()
+        #self.speech_label_text.set(text)
+        #self.speech_label.place(relx=0.5, rely=0.41, anchor=CENTER)
 
     def clear_screen(self):
-        self.angry.place_forget()
-        self.kawaii.place_forget()
-        self.idle.place_forget()
-        self.idle_to_wave.place_forget()
-        self.wave.place_forget()
-        self.dab.place_forget()
-        self.jump.place_forget()
-        self.speech_label.place_forget()
+        self.angry.hide()
+        self.kawaii.hide()
+        self.idle.hide()
+        self.wave.hide()
+        self.dab.hide()
+        self.jump.hide()
+        #self.speech_label.hide()
 
     def create_idle_screen(self):
-        self.idle.place(x=844, y=1517)
+        self.idle.move(844, 1579)
+        self.idle.show()
 
     def create_receiving_request_screen(self):
-        self.wave.place(x=844, y=1466)
+        self.wave.move(844, 1466)
+        self.wave.show()
 
     def create_receiving_tool_screen(
             self, early=False, on_time=False, late=False):
         if early:
-            self.kawaii.place(x=916, y=1566)
+            self.kawaii.move(916, 1566)
+            self.kawaii.show()
         elif on_time:
-            self.jump.place(x=640, y=1201)
+            self.jump.move(640, 1201)
+            self.jump.show()
         elif late:
-            self.angry.place(x=893, y=1468)
+            self.angry.move(893, 1468)
+            self.angry.show()
         else:
             raise ValueError("Neither early, on_time or late!!!")
 
     def create_travelling_screen(self):
-        self.dab.place(x=671, y=1546)
+        self.dab.move(671, 1546)
+        self.dab.show()
 
     def process_new_state(self, state_msg):
         self.clear_screen()
@@ -60,63 +65,75 @@ class App(Canvas):
         self.last_state = state_msg
 
     def create_widgets(self):
-        self.bg = ImageLabel(self)
-        self.bg.place(x=0, y=0)
-        self.bg.load(self.__assets.get_asset('background'), 1)
+        self.bg = QtGui.QLabel(self) 
+        pixmap = QtGui.QPixmap(self.__assets.get_asset('background'))
+        self.bg.setPixmap(pixmap)
+        self.bg.resize(pixmap.width(), pixmap.height())
+        self.bg.move(0, 0)
 
-        self.QUIT = Button(self)
-        self.QUIT["text"] = "YEET"
-        self.QUIT["fg"] = "red"
-        self.QUIT["command"] = self.quit
-        self.QUIT.place(relx=0.97, rely=0.01, anchor=CENTER)
+        self.QUIT = QtGui.QPushButton("YEET", self)
+        self.QUIT.clicked.connect(QtCore.QCoreApplication.instance().quit)
+        self.QUIT.resize(self.QUIT.minimumSizeHint())#40, 20)
+        self.QUIT.move(1500, 10)
 
-        size = 1.0
-
-        self.speech_bubble = ImageLabel(self)
-        self.speech_bubble.place()
-        self.speech_bubble.load(self.__assets.get_asset('speech'), size)
-
+        self.speech_bubble = QtGui.QLabel(self)
+        pixmap = QtGui.QPixmap(self.__assets.get_asset('speech'))
+        self.speech_bubble.setPixmap(pixmap)
+        self.speech_bubble.resize(pixmap.width(), pixmap.height())
+        
+        """
         self.speech_label_text = StringVar()
         self.speech_label = Label(
             self.speech_bubble, textvariable=self.speech_label_text, 
             wraplength=1050, font=("monospace", 30))
-        self.speech_label.place()
+        """
 
-        self.angry = ImageLabel(self)
-        self.angry.place(x=0, y=0)
-        self.angry.load(self.__assets.get_asset('angry'), size)
+        self.angry = QtGui.QLabel(self)
+        self.angrymovie = QtGui.QMovie(self.__assets.get_asset('angry'))
+        self.angry.setMovie(self.angrymovie)
+        self.angrymovie.start()
+        self.angry.resize(self.angrymovie.frameRect().size())
 
-        self.idle = ImageLabel(self)
-        self.idle.place()
-        self.idle.load(self.__assets.get_asset('idle'), size)
+        self.idle = QtGui.QLabel(self)
+        self.idlemovie = QtGui.QMovie(self.__assets.get_asset('idle'))
+        self.idle.setMovie(self.idlemovie)
+        self.idlemovie.start()
+        self.idle.resize(self.idlemovie.frameRect().size())
 
-        self.dab = ImageLabel(self)
-        self.dab.place()
-        self.dab.load(self.__assets.get_asset('dab'), size)
+        self.dab = QtGui.QLabel(self)
+        self.dabmovie = QtGui.QMovie(self.__assets.get_asset('dab'))
+        self.dab.setMovie(self.dabmovie)
+        self.dabmovie.start()
+        self.dab.resize(self.dabmovie.frameRect().size())
 
-        self.idle_to_wave = ImageLabel(self)
-        self.idle_to_wave.place()
-        self.idle_to_wave.load(self.__assets.get_asset('idle_to_wave'), size)
+        self.wave = QtGui.QLabel(self)
+        self.wavemovie = QtGui.QMovie(self.__assets.get_asset('wave'))
+        self.wave.setMovie(self.wavemovie)
+        self.wavemovie.start()
+        self.wave.resize(self.wavemovie.frameRect().size())
 
-        self.wave = ImageLabel(self)
-        self.wave.place()
-        self.wave.load(self.__assets.get_asset('wave'), size)
+        self.jump = QtGui.QLabel(self)
+        self.jumpmovie = QtGui.QMovie(self.__assets.get_asset('jump'))
+        self.jump.setMovie(self.jumpmovie)
+        self.jumpmovie.start()
+        self.jump.resize(self.jumpmovie.frameRect().size())
 
-        self.jump = ImageLabel(self)
-        self.jump.place()
-        self.jump.load(self.__assets.get_asset('jump'), size)
-
-        self.kawaii = ImageLabel(self)
-        self.kawaii.place()
-        self.kawaii.load(self.__assets.get_asset('kawaii'), size)
+        self.kawaii = QtGui.QLabel(self)
+        self.kawaiimovie = QtGui.QMovie(self.__assets.get_asset('kawaii'))
+        self.kawaii.setMovie(self.kawaiimovie)
+        self.kawaiimovie.start()
+        self.kawaii.resize(self.kawaiimovie.frameRect().size())
 
 
     def __init__(self, master=None):
-        Canvas.__init__(self, master, width=1600, height=2560, bd=0)
-        self.pack()
+        super(App, self).__init__()
+        self.setGeometry(0, 0, 1600, 2560)
+
+        #self.pack()
         self.last_state = None
         self.__assets = AssetFinder()
         self.create_widgets()
         self.clear_screen()
         self.create_idle_screen()
         self.write_yeetbot_speech("Hello world")
+        self.show()
