@@ -12,3 +12,4 @@ echo 'vncconfig -iconic &' >> ~/.vnc/xstartup
 echo 'export XKL_XMODMAP_DISABLE=1' >> ~/.vnc/xstartup
 echo '/etc/X11/Xsession' >> ~/.vnc/xstartup
 echo '/usr/bin/xterm -geometry 80x24+100+100 -ls -title "Launch Me" &' >> ~/.vnc/xstartup
+chmod a+x ~/.vnc/xstartup

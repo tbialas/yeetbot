@@ -6,10 +6,9 @@ from yeetbot_gui.image_label import ImageLabel
 
 class App(Canvas):
     def write_yeetbot_speech(self, text):
-        x_pos = 300
-        y_pos = 1000
+        self.speech_bubble.place(x=86, y=629)
         self.speech_label_text.set(text)
-        self.speech_label.place(relx=0.5, rely=0.8, anchor=CENTER)
+        self.speech_label.place(relx=0.5, rely=0.41, anchor=CENTER)
 
     def clear_screen(self):
         self.angry.place_forget()
@@ -22,26 +21,26 @@ class App(Canvas):
         self.speech_label.place_forget()
 
     def create_idle_screen(self):
-        self.idle.place(x=1500, y=700)
+        self.idle.place(x=844, y=1517)
 
     def create_receiving_request_screen(self):
-        self.wave.place(x=1500, y=700)
+        self.wave.place(x=844, y=1466)
 
     def create_receiving_tool_screen(
             self, early=False, on_time=False, late=False):
         if early:
-            self.kawaii.place(x=1500, y=700)
+            self.kawaii.place(x=916, y=1566)
         elif on_time:
-            self.jump.place(x=1500, y=700)
+            self.jump.place(x=640, y=1201)
         elif late:
-            self.angry.place(x=1500, y=700)
+            self.angry.place(x=893, y=1468)
         else:
             raise ValueError("Neither early, on_time or late!!!")
 
     def create_travelling_screen(self):
-        self.dab.place(x=1500, y=700)
+        self.dab.place(x=671, y=1546)
 
-    def process_new_state(state_msg):
+    def process_new_state(self, state_msg):
         self.clear_screen()
         if state_msg.current_state == state_msg.IDLE:
             self.create_idle_screen()
@@ -61,16 +60,30 @@ class App(Canvas):
         self.last_state = state_msg
 
     def create_widgets(self):
+        self.bg = ImageLabel(self)
+        self.bg.place(x=0, y=0)
+        self.bg.load(self.__assets.get_asset('background'), 1)
+
         self.QUIT = Button(self)
         self.QUIT["text"] = "YEET"
         self.QUIT["fg"] = "red"
         self.QUIT["command"] = self.quit
-        self.QUIT.place(relx=0.5, rely=0.5, anchor=CENTER)
+        self.QUIT.place(relx=0.97, rely=0.01, anchor=CENTER)
 
-        size = 0.2
+        size = 1.0
+
+        self.speech_bubble = ImageLabel(self)
+        self.speech_bubble.place()
+        self.speech_bubble.load(self.__assets.get_asset('speech'), size)
+
+        self.speech_label_text = StringVar()
+        self.speech_label = Label(
+            self.speech_bubble, textvariable=self.speech_label_text, 
+            wraplength=1050, font=("monospace", 30))
+        self.speech_label.place()
 
         self.angry = ImageLabel(self)
-        self.angry.place()
+        self.angry.place(x=0, y=0)
         self.angry.load(self.__assets.get_asset('angry'), size)
 
         self.idle = ImageLabel(self)
@@ -97,10 +110,6 @@ class App(Canvas):
         self.kawaii.place()
         self.kawaii.load(self.__assets.get_asset('kawaii'), size)
 
-        self.speech_label_text = StringVar()
-        self.speech_label = Label(
-            self, textvariable=self.speech_label_text, wraplength=1200)
-        self.speech_label.place()
 
     def __init__(self, master=None):
         Canvas.__init__(self, master, width=1600, height=2560, bd=0)

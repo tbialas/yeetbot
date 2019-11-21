@@ -18,6 +18,18 @@ def main():
 
     rospy.Subscriber("/text_msg", String, speech_text_cb)
 
+    global state
+    state = 0
+    def state_swap_cb(timer):
+        global state
+        state += 1
+        state %= 6
+        state_msg = YEETBotState()
+        state_msg.current_state = state
+        app.process_new_state(state_msg)
+
+    timer = rospy.Timer(rospy.Duration(3), state_swap_cb)
+
     try:
         app.mainloop()
     except rospy.exceptions.ROSException:
