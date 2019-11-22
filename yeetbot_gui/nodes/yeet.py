@@ -20,17 +20,10 @@ def main():
 
     rospy.Subscriber("/text_msg", String, speech_text_cb)
 
-    global state
-    state = 0
-    def state_swap_cb(timer):
-        global state
-        state += 1
-        state %= 6
-        state_msg = YEETBotState()
-        state_msg.current_state = state
+    def state_swap_cb(state_msg):
         app.process_new_state(state_msg)
 
-    timer = rospy.Timer(rospy.Duration(3), state_swap_cb)
+    rospy.Subscriber("/yeetbot_state", YEETBotState, state_swap_cb)
 
     root.exec_()
 
