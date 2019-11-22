@@ -2,9 +2,38 @@ from PyQt4 import QtGui, QtCore
 import queue
 
 from yeetbot_gui.asset_finder import AssetFinder
+from yeetbot_gui.button_option import ButtonOption
 
 
 class App(QtGui.QMainWindow):
+    def set_response_cb(self, response_cb):
+        self.response_cb = response_cb
+
+    def write_new_choices(self, choices_msg):
+        try:
+            self.choices_queue.put_nowait(choices_msg)
+        except queue.Full:
+            self.choices_queue.get_nowait()
+            self.choices_queue.put_nowait(choices_msg)
+
+    def process_choices_queue(self):
+        try:
+            choice = self.choices_queue.get_nowait()
+        except queue.Empty:
+            return
+        self.option_buttons = []
+        num_options = len(choice.user_options)
+        h = 1000 / num_options - 20
+        num = 0
+        for option in choice.user_options:
+            self.option_buttons.append(ButtonOption(
+                self, number=num, text=option, callback=self.response_cb,
+                height=h))
+            self.option_buttons[-1].move(17, num * (h + 20) + 1425)
+            self.option_buttons[-1].show()
+            num += 1
+        self.show()
+
     def write_yeetbot_speech(self, text):
         try:
             self.speech_queue.put_nowait(text)
@@ -30,6 +59,7 @@ class App(QtGui.QMainWindow):
         self.dab.hide()
         self.jump.hide()
         self.speech_label.hide()
+        self.option_buttons = []
 
     def create_idle_screen(self):
         self.idle.move(844, 1579)
@@ -166,6 +196,7 @@ class App(QtGui.QMainWindow):
 
         self.speech_queue = queue.Queue(maxsize=2)
         self.state_queue = queue.Queue(maxsize=2)
+        self.choices_queue = queue.Queue(maxsize=2)
 
         # QTimers to process ROS message inputs on the main thread
         self.speech_timer = QtCore.QTimer()
@@ -176,10 +207,17 @@ class App(QtGui.QMainWindow):
         self.speech_timer.timeout.connect(self.process_state_queue)
         self.state_timer.start(500) # 2 Hz
 
+        self.choices_timer = QtCore.QTimer()
+        self.choices_timer.timeout.connect(self.process_choices_queue)
+        self.choices_timer.start(500) # 2 Hz
+
+        self.choice_buttons = []
+
         self.last_state = None
         self.__assets = AssetFinder()
         self.create_widgets()
         self.clear_screen()
         self.create_idle_screen()
         self.write_yeetbot_speech("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras pellentesque ante purus, ac porta orci maximus ac. Nunc at maximus purus. Cras sit amet lacus interdum, elementum lectus a, interdum sem. Nullam venenatis porta viverra. Nullam posuere lacus vel tellus pharetra, ut pellentesque turpis sagittis. Nulla non ") 
+
         self.show()

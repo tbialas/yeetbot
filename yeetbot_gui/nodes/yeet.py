@@ -25,6 +25,21 @@ def main():
 
     rospy.Subscriber("/yeetbot_state", YEETBotState, state_swap_cb)
 
+    choice_pub = rospy.Publisher(
+        "/user_response", YEETBotUserResponse, queue_size=1)
+    def response_cb(user_choice):
+        msg = YEETBotUserResponse()
+        msg.choice = user_choice
+        msg.invalid_choice = False
+        choice_pub.publish(msg)
+
+    app.set_response_cb(response_cb)
+
+    def choices_cb(choices_msg):
+        app.write_new_choices(choices_msg)
+
+    rospy.Subscriber("/user_choices", YEETBotUserChoices, choices_cb)
+
     root.exec_()
 
 if __name__ == '__main__':
