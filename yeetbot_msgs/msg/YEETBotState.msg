@@ -6,13 +6,15 @@ int8 IDLE                   =   0
 # States to do with user requests for tools
 int8 RECEIVING_REQUEST      =   1
 
-# States to do with returning tools
+# States to do with tools
 int8 RECEIVING_TOOL_EARLY   =   2
 int8 RECEIVING_TOOL_ON_TIME =   3
 int8 RECEIVING_TOOL_LATE    =   4
 
+int8 GIVING_TOOL            =   5
+
 # States to do with travelling
-int8 TRAVELLING             =   5
+int8 TRAVELLING             =   6
 
 # ==============================================================
 # ==============================================================

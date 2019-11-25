@@ -52,6 +52,7 @@ class App(QtGui.QMainWindow):
         self.speech_bubble.show()
         self.speech_label.setText(text)
         self.speech_label.show()
+        print "Text: " + text
 
     def clear_screen(self):
         self.angry.hide()
@@ -90,6 +91,11 @@ class App(QtGui.QMainWindow):
         else:
             raise ValueError("Neither early, on_time or late!!!")
 
+    def create_giving_tool_screen(self):
+        self.jump.move(640, 1201)
+        self.jumpmovie.jumpToFrame(0)
+        self.jump.show()
+
     def create_travelling_screen(self):
         self.dab.move(671, 1546)
         self.dabmovie.jumpToFrame(0)
@@ -118,6 +124,8 @@ class App(QtGui.QMainWindow):
             self.create_receiving_tool_screen(on_time=True)
         elif state_msg.current_state == state_msg.RECEIVING_TOOL_LATE:
             self.create_receiving_tool_screen(late=True)
+        elif state_msg.current_state == state_msg.GIVING_TOOL:
+            self.create_giving_tool_screen()
         elif state_msg.current_state == state_msg.TRAVELLING:
             self.create_travelling_screen()
         else:
@@ -201,17 +209,11 @@ class App(QtGui.QMainWindow):
         self.choices_queue = queue.Queue(maxsize=2)
 
         # QTimers to process ROS message inputs on the main thread
-        self.speech_timer = QtCore.QTimer()
-        self.speech_timer.timeout.connect(self.process_speech_queue)
-        self.speech_timer.start(500) # 2 Hz
-
-        self.state_timer = QtCore.QTimer()
-        self.speech_timer.timeout.connect(self.process_state_queue)
-        self.state_timer.start(500) # 2 Hz
-
-        self.choices_timer = QtCore.QTimer()
-        self.choices_timer.timeout.connect(self.process_choices_queue)
-        self.choices_timer.start(500) # 2 Hz
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.process_state_queue)
+        self.timer.timeout.connect(self.process_speech_queue)
+        self.timer.timeout.connect(self.process_choices_queue)
+        self.timer.start(500) # 2 Hz
 
         self.choice_buttons = []
 
