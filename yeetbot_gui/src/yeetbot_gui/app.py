@@ -21,14 +21,16 @@ class App(QtGui.QMainWindow):
             choice = self.choices_queue.get_nowait()
         except queue.Empty:
             return
+        for button in self.option_buttons:
+            button.remove()
         self.option_buttons = []
         num_options = len(choice.user_options)
         h = 1000 / num_options - 20
         num = 0
         for option in choice.user_options:
             self.option_buttons.append(ButtonOption(
-                self, number=num, text=option, callback=self.response_cb,
-                height=h))
+                self, option_number=num, text=option, 
+                callback=self.response_cb, height=h))
             self.option_buttons[-1].move(17, num * (h + 20) + 1425)
             self.option_buttons[-1].show()
             num += 1
