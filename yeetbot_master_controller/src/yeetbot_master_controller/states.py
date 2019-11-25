@@ -17,8 +17,7 @@ class Idle(State):
         state_pub.publish(state_msg)
 
         speech_msg = String()
-        speech_msg.data = "YEET"
-        #speech_msg.data = "Hello, I am YEETBot3000!\n\nTo get my attention, just wave and say \"YEETBot3000\".\n\nHow can I help you today?"
+        speech_msg.data = "Hello, I am YEETBot3000!\n\nTo get my attention, just wave and say \"YEETBot3000\".\n\nHow can I help you today?"
         text_msg_pub.publish(speech_msg)
 
     def run(self):

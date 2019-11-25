@@ -1,0 +1,2 @@
+class NoToolsTimedOutError(Exception):
+    pass
