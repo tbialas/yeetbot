@@ -16,7 +16,7 @@ class Tool:
             self.time_taken = rospy.Time.now()
 
     def is_timed_out(self):
-        if self.state = False:
+        if self.state == False:
             dur = rospy.Time.now() - self.time_taken
             if dur.secs >= TOOL_TIMEOUT:
                 return True

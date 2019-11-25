@@ -52,7 +52,6 @@ class App(QtGui.QMainWindow):
         self.speech_bubble.show()
         self.speech_label.setText(text)
         self.speech_label.show()
-        print "Text: " + text
 
     def clear_screen(self):
         self.angry.hide()
@@ -62,6 +61,8 @@ class App(QtGui.QMainWindow):
         self.dab.hide()
         self.jump.hide()
         self.speech_label.hide()
+        for button in self.option_buttons:
+            button.remove()
         self.option_buttons = []
 
     def create_idle_screen(self):
@@ -199,6 +200,8 @@ class App(QtGui.QMainWindow):
         self.kawaiimovie.start()
         self.kawaii.resize(self.kawaiimovie.frameRect().size())
 
+        self.option_buttons = []
+
 
     def __init__(self, master=None):
         super(App, self).__init__()
@@ -213,9 +216,7 @@ class App(QtGui.QMainWindow):
         self.timer.timeout.connect(self.process_state_queue)
         self.timer.timeout.connect(self.process_speech_queue)
         self.timer.timeout.connect(self.process_choices_queue)
-        self.timer.start(500) # 2 Hz
-
-        self.choice_buttons = []
+        self.timer.start(100) # 10 Hz
 
         self.last_state = None
         self.__assets = AssetFinder()

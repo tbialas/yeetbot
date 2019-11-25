@@ -1,30 +1,34 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String
 
-from yeetbot_master_controller.state_machine import StateMachine
+rospy.init_node('master_controller')
+
 from yeetbot_master_controller.item_database import item_database
+from yeetbot_master_controller.state_machine import StateMachine
 from yeetbot_master_controller.exceptions import NoToolsTimedOutError
+from yeetbot_master_controller.user_interface import user_interface
 
 
 def main():
-    rospy.init_node('master_controller')
-    rate = rospy.Rate(0.2)
+    rospy.sleep(1)
+    rate = rospy.Rate(2)
 
     # Init the state machine
     machine = StateMachine()
 
     #item_database.wait_until_ready()
 
-    input_array = { 'yeet_request':1,
+    print "Item Database ready"
+
+    input_array = { 'yeet_request':0,
                     'tool_timeout':0,
-                    'request':"lend",
-                    'request_verified':1,
-                    'tool_removed':1,
+                    'request':'',
+                    'request_verified':0,
+                    'tool_removed':0,
                     'tool_replaced':0,
                     'target_set':0,
-                    'target_reached':1}
+                    'target_reached':0}
 
     while not rospy.is_shutdown():
         # Update the state machine
@@ -36,6 +40,22 @@ def main():
             input_array['tool_timeout'] = 1
         except NoToolsTimedOutError:
             input_array['tool_timeout'] = 0
+
+        # Check if the user has requested a state change
+        if user_interface.user_requested_borrow:
+            input_array['request'] = 'lend'
+            user_interface.reset()
+        elif user_interface.user_requested_return:
+            input_array['request'] = 'return'
+            user_interface.reset()
+        else:
+            input_array['request'] = ''
+
+        if user_interface.tool_requested != '':
+            input_array['request_verified'] = 1
+            user_interface.reset()
+        else:
+            input_array['request_verified'] = 0
 
         # Sleep
         rate.sleep()

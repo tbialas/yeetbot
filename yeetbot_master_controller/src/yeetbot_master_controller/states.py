@@ -1,5 +1,6 @@
 from yeetbot_msgs.msg import YEETBotState
 from yeetbot_master_controller.interfaces import state_pub, text_msg_pub
+from yeetbot_master_controller.user_interface import user_interface
 from std_msgs.msg import String
 
 class State:
@@ -20,6 +21,8 @@ class Idle(State):
         speech_msg.data = "Hello, I am YEETBot3000!\n\nTo get my attention, just wave and say \"YEETBot3000\".\n\nHow can I help you today?"
         text_msg_pub.publish(speech_msg)
 
+        user_interface.idle_screen_choices()
+
     def run(self):
         # In the idle state we are just that - idle
         # We don't need to do anything other than wait for inputs to change
@@ -31,6 +34,10 @@ class Idle(State):
             return Travelling()
         elif input_array['tool_timeout'] == 1:
             return ForceReturn()
+        elif input_array['request'] == 'lend':
+            return VerifyRequest('lend')
+        elif input_array['request'] == 'return':
+            return VerifyRequest('return')
         else:
             return self
 
@@ -48,26 +55,44 @@ class Travelling(State):
 
     def next(self, input_array):
         if input_array['target_reached'] == 1:
-            return VerifyRequest()
+            return VerifyRequest('')
         else:
             return self
 
 
 class VerifyRequest(State):
-    def __init__(self):
+    def __init__(self, request_type):
         state_msg = YEETBotState()
         state_msg.current_state = YEETBotState.RECEIVING_REQUEST
         state_pub.publish(state_msg)
+
+        self.request_type = request_type
+
+        speech_msg = String()
+        if request_type == 'lend':
+            speech_msg.data = "Which tool would you like to borrow?"
+            user_interface.borrow_choices()
+        elif request_type == 'return':
+            speech_msg.data = "Which tool would you like to return?"
+            user_interface.return_choices()
+        else:
+            speech_msg.data = "How may I help you?"
+            user_interface.idle_screen_choices()
+        text_msg_pub.publish(speech_msg)
 
     def run(self):
         # TODO: check tool database
         return "VerifyRequest"
 
     def next(self, input_array):
-        if input_array['request'] == "lend" and input_array['request_verified'] == 1:
-            return LendTool()
-        elif input_array['request'] == "return" and input_array['request_verified'] == 1:
-            return ReturnTool()
+        if input_array['request'] == 'lend':
+            if input_array['request_verified'] == 1:
+                return LendTool()
+            self.request_type = 'lend'
+        elif input_array['request'] == 'return':
+            if input_array['request_verified'] == 1:
+                return ReturnTool()
+            self.request_type = 'return'
         else:
             return self
 
@@ -77,6 +102,19 @@ class LendTool(State):
         state_msg = YEETBotState()
         state_msg.current_state = YEETBotState.GIVING_TOOL
         state_pub.publish(state_msg)
+
+        if user_interface.tool_requested == 'pliers':
+            print "requested pliers"
+        elif user_interface.tool_requested == 'screw_driver':
+            print "requested screw_driver"
+        elif user_interface.tool_requested == 'wire_strippers':
+            print "requested wire strippers"
+        elif user_interface.tool_requested == 'vernier_calipers':
+            print "requested vernier calipers"
+        else:
+            raise RuntimeError("Unknown tool {}".format(user_interface.tool_requested))
+        user_interface.tool_requested = ''
+        user_interface.user_requested_borrow = False
 
     def run(self):
         # Start tool timer
@@ -96,6 +134,19 @@ class ReturnTool(State):
         # TODO: Check whether the tool is early or on time
         state_msg.current_state = YEETBotState.RECEIVING_TOOL_ON_TIME
         state_pub.publish(state_msg)
+
+        if user_interface.tool_requested == 'pliers':
+            print "requested pliers"
+        elif user_interface.tool_requested == 'screw_driver':
+            print "requested screw_driver"
+        elif user_interface.tool_requested == 'wire_strippers':
+            print "requested wire strippers"
+        elif user_interface.tool_requested == 'vernier_calipers':
+            print "requested vernier calipers"
+        else:
+            raise RuntimeError("Unknown tool {}".format(user_interface.tool_requested))
+        user_interface.tool_requested = ''
+        user_interface.user_requested_return = False
 
     def run(self):
         # Tool has been returned
