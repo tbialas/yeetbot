@@ -3,6 +3,7 @@ project(yeetbot_gui)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
+  yeetbot_msgs
 )
 
 catkin_package()
