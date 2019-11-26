@@ -64,8 +64,6 @@ def main():
         else:
             input_array['tool_replaced'] = 0
 
-        print input_array
-
         # Sleep
         rate.sleep()
 

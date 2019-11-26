@@ -116,7 +116,7 @@ class ItemDatabase:
             raise NotImplementedError
 
     def wait_until_ready(self):
-        while not self.is_ready():
+        while not self.is_ready() and not rospy.is_shutdown():
             rospy.sleep(1)
             print "Waiting for initial item drawer state."
 

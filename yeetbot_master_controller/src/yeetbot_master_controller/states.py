@@ -1,10 +1,16 @@
+from math import sqrt
+
 import rospy
+
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 
 from yeetbot_msgs.msg import YEETBotState
 from yeetbot_master_controller.interfaces import publish_state_update, text_msg_pub
 from yeetbot_master_controller.user_interface import user_interface
 from yeetbot_master_controller.item_database import item_database
-from std_msgs.msg import String
+from yeetbot_master_controller import navigation_interface
+from navigation_interface import nav_interface
 
 
 class State:
@@ -45,9 +51,21 @@ class Travelling(State):
     def __init__(self):
         publish_state_update(YEETBotState.TRAVELLING)
 
+        self.current_goal = PoseStamped()
+        nav_interface.goto_pos(self.current_goal)
+
+    def goal_distance(self, terget_pose):
+        dx = target_pose.pose.position.x - self.current_goal.pose.position.x
+        dy = target_pose.pose.position.y - self.current_goal.pose.position.y
+        return sqrt(dx*dx + dy*dy)
+
     def run(self):
-        # TODO: Interface with the navigation stuff and attempt to move to 
-        # the required location
+        target_pose = PoseStamped()
+
+        if self.goal_distance(target_pose) >= 2:
+            self.current_goal = target_pose
+            nav_interface.goto_pos(self.current_goal)
+
         return "Travelling"
 
     def next(self, input_array):
