@@ -17,7 +17,7 @@ def main():
     # Init the state machine
     machine = StateMachine()
 
-    #item_database.wait_until_ready()
+    item_database.wait_until_ready()
 
     print "Item Database ready"
 
@@ -25,8 +25,8 @@ def main():
                     'tool_timeout':0, # Done
                     'request':'', # Done
                     'request_verified':0, # Done
-                    'tool_removed':0, # Not Done
-                    'tool_replaced':0, # Not Done
+                    'tool_removed':0, # Done
+                    'tool_replaced':0, # Done
                     'target_set':0, # Not Done
                     'target_reached':0} # Not Done
 
@@ -53,6 +53,18 @@ def main():
             input_array['request_verified'] = 1
         else:
             input_array['request_verified'] = 0
+
+        # Check if any tools have been taken or removed
+        if item_database.tool_taken:
+            input_array['tool_removed'] = 1
+        else:
+            input_array['tool_removed'] = 0
+        if item_database.tool_returned:
+            input_array['tool_replaced'] = 1
+        else:
+            input_array['tool_replaced'] = 0
+
+        print input_array
 
         # Sleep
         rate.sleep()

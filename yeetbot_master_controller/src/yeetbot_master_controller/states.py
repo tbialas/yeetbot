@@ -3,6 +3,7 @@ import rospy
 from yeetbot_msgs.msg import YEETBotState
 from yeetbot_master_controller.interfaces import publish_state_update, text_msg_pub
 from yeetbot_master_controller.user_interface import user_interface
+from yeetbot_master_controller.item_database import item_database
 from std_msgs.msg import String
 
 
@@ -113,8 +114,17 @@ class LendTool(State):
             raise RuntimeError("Unknown tool {}".format(tool))
         
         speech_msg = String()
-        speech_msg.data = "Please take the {} from the drawer that I am opening for you.".format(tool.replace('_', ' '))
+        if item_database.contains_tool(tool):
+            speech_msg.data = "Please take the {} from the drawer that I am opening for you.".format(tool.replace('_', ' '))
+            item_database.change_drawer_state(tool, True)
+            self.false_request = False
+        else:
+            speech_msg.data = "I'm sorry, I don't have that tool in stock. Perhaps you could return it to me?"
+            self.false_request = True
+
         text_msg_pub.publish(speech_msg)
+        
+        self.tool = tool
 
         user_interface.tool_requested = ''
         user_interface.user_requested_borrow = False
@@ -126,9 +136,15 @@ class LendTool(State):
 
     def next(self, input_array):
         if input_array['tool_removed'] == 1:
+            item_database.tool_taken = False
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         dur = rospy.Time.now() - self.time_started
+        if self.false_request:
+            if dur.secs > 5:
+                return Idle()
         if dur.secs > 15:
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         return self
 
@@ -142,10 +158,20 @@ class ReturnTool(State):
         if(tool != 'pliers' and tool != 'screw_driver'
            and tool != 'wire_strippers' and tool != 'vernier_calipers'):
             raise RuntimeError("Unknown tool {}".format(tool))
-        
+
         speech_msg = String()
-        speech_msg.data = "Please return the {} to the drawer that I am opening for you.".format(tool.replace('_', ' '))
+        if item_database.is_tool_missing(tool):
+            speech_msg.data = "Please return the {} to the drawer that I am opening for you.".format(tool.replace('_', ' '))
+            item_database.change_drawer_state(tool, True)
+            self.false_request = False
+        else:
+            speech_msg.data = "I'm not missing any of those!"
+            self.false_request = True
+
         text_msg_pub.publish(speech_msg)
+
+
+        self.tool = tool
 
         user_interface.tool_requested = ''
         user_interface.user_requested_borrow = False
@@ -157,9 +183,15 @@ class ReturnTool(State):
 
     def next(self, input_array):
         if input_array['tool_replaced'] == 1:
+            item_database.tool_returned = False
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         dur = rospy.Time.now() - self.time_started
+        if self.false_request:
+            if dur.secs > 5:
+                return Idle()
         if dur.secs > 15:
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         return self
 
