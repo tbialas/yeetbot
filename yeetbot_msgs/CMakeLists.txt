@@ -14,6 +14,7 @@ add_message_files(
   YEETBotUserChoices.msg
   YEETBotUserResponse.msg
   YEETBotItemStates.msg
+  YEETBotDrawerStates.msg
 )
 
 # Generate services in the 'srv' folder
