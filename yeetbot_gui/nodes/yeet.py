@@ -27,9 +27,10 @@ def main():
 
     choice_pub = rospy.Publisher(
         "/user_response", YEETBotUserResponse, queue_size=1)
-    def response_cb(user_choice):
+    def response_cb(user_choice, choice_id):
         msg = YEETBotUserResponse()
         msg.choice = user_choice
+        msg.id = choice_id
         msg.invalid_choice = False
         choice_pub.publish(msg)
 

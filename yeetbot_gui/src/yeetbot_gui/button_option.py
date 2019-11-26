@@ -3,10 +3,11 @@ from PyQt4 import QtGui, QtCore
 
 class ButtonOption(QtGui.QLabel):
     def __init__(self, master, option_number=0, text="Example", 
-                 callback=None, height=200, width=800):
+                 callback=None, height=200, width=800, choice_id=0):
         super(QtGui.QLabel, self).__init__(master)
         self.button = QtGui.QPushButton(self)
-        self.button.clicked.connect(lambda :callback(option_number))
+        self.button.clicked.connect(
+            lambda :callback(option_number, choice_id))
         self.button.resize(100, 100)
         self.button.move(0, 0)
         self.button.show()

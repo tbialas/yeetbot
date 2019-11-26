@@ -36,6 +36,8 @@ class UserInterface:
         self.user_requested_borrow = False
         self.user_requested_return = False
 
+        self.choice_id = 0
+
     def reset(self):
         self.choices = YEETBotUserChoices()
         self.choices.multi_choice = False
@@ -46,6 +48,8 @@ class UserInterface:
         self.reset()
         for choice in choice_array:
             self.choices.user_options.append(choice)
+        self.choice_id += 1
+        self.choices.id = self.choice_id
         self.choices_pub.publish(self.choices)
 
     def idle_screen_choices(self):
@@ -62,6 +66,9 @@ class UserInterface:
              RETURN_VERNIER_CALIPERS])
 
     def response_cb(self, response_msg):
+        if response_msg.id != self.choice_id:
+            print "User response ID did not match expected ID"
+            return
         if response_msg.invalid_choice:
             self.reset()
             msg = String()
@@ -72,6 +79,7 @@ class UserInterface:
         try:
             resp = self.choices.user_options[response_msg.choice]
         except IndexError:
+            print "IndexError"
             return
 
         if resp == BORROW:

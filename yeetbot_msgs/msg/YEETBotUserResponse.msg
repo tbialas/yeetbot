@@ -8,3 +8,7 @@ int32 choice
 # to one of the acceptable answers. This might be useful for NLP?
 # Set it to false otherwise.
 bool invalid_choice
+
+# Continuously increasing choice ID - this should match the corresponding
+# YEETBotUserChoices id
+int64 id

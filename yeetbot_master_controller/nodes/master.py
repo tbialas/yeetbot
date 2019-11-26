@@ -21,14 +21,14 @@ def main():
 
     print "Item Database ready"
 
-    input_array = { 'yeet_request':0,
-                    'tool_timeout':0,
-                    'request':'',
-                    'request_verified':0,
-                    'tool_removed':0,
-                    'tool_replaced':0,
-                    'target_set':0,
-                    'target_reached':0}
+    input_array = { 'yeet_request':0, # Not Done
+                    'tool_timeout':0, # Done
+                    'request':'', # Done
+                    'request_verified':0, # Done
+                    'tool_removed':0, # Not Done
+                    'tool_replaced':0, # Not Done
+                    'target_set':0, # Not Done
+                    'target_reached':0} # Not Done
 
     while not rospy.is_shutdown():
         # Update the state machine
@@ -44,16 +44,13 @@ def main():
         # Check if the user has requested a state change
         if user_interface.user_requested_borrow:
             input_array['request'] = 'lend'
-            user_interface.reset()
         elif user_interface.user_requested_return:
             input_array['request'] = 'return'
-            user_interface.reset()
         else:
             input_array['request'] = ''
 
         if user_interface.tool_requested != '':
             input_array['request_verified'] = 1
-            user_interface.reset()
         else:
             input_array['request_verified'] = 0
 
