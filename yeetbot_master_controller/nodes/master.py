@@ -28,7 +28,6 @@ def main():
                     'tool_removed':0, # Done
                     'tool_replaced':0, # Done
                     'target_set':0, # Not Done
-                    'target_reached':0} # Not Done
 
     while not rospy.is_shutdown():
         # Update the state machine

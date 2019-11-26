@@ -54,7 +54,9 @@ class Travelling(State):
         self.current_goal = PoseStamped()
         nav_interface.goto_pos(self.current_goal)
 
-    def goal_distance(self, terget_pose):
+        self.state = navigation_interface.ACTIVE
+
+    def goal_distance(self, target_pose):
         dx = target_pose.pose.position.x - self.current_goal.pose.position.x
         dy = target_pose.pose.position.y - self.current_goal.pose.position.y
         return sqrt(dx*dx + dy*dy)
@@ -66,11 +68,16 @@ class Travelling(State):
             self.current_goal = target_pose
             nav_interface.goto_pos(self.current_goal)
 
+        self.state = nav_interface.get_state()
+
         return "Travelling"
 
     def next(self, input_array):
-        if input_array['target_reached'] == 1:
+        if state == navigation_interface.SUCCEEDED:
             return VerifyRequest('')
+        elif state == navigation_interface.NOTHING:
+            # TODO: Ask for help!
+            return Idle()
         else:
             return self
 
@@ -188,7 +195,6 @@ class ReturnTool(State):
 
         text_msg_pub.publish(speech_msg)
 
-
         self.tool = tool
 
         user_interface.tool_requested = ''
@@ -214,8 +220,9 @@ class ReturnTool(State):
         return self
 
 
-class ForceReturn(State):
+class ForceReturn(Travelling):
     def __init__(self):
+        super(Travelling, self).__init__()
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
 
     def run(self):
