@@ -56,7 +56,7 @@ def callback(drawer_states_msg):
     else:
         command = ">1c<"
     arduino.write(command)
-    print (command)
+    #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
     
     if drawer_states_msg.screw_driver_drawer:
@@ -64,7 +64,7 @@ def callback(drawer_states_msg):
     else:
         command = ">2c<"
     arduino.write(command)
-    print (command)
+    #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
     
     if drawer_states_msg.wire_stripper_drawer:
@@ -72,7 +72,7 @@ def callback(drawer_states_msg):
     else:
         command = ">3c<"
     arduino.write(command)
-    print (command)
+    #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
       
     if drawer_states_msg.vernier_caliper_drawer:
@@ -80,7 +80,7 @@ def callback(drawer_states_msg):
     else:
         command = ">4c<"
     arduino.write(command)
-    print (command)
+    #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
     
         
@@ -164,7 +164,7 @@ def getStates():
     arduino.write(">1i<")
     #cmd = arduino.read_until("<")
     cmd = arduino.read_until("<").strip()
-    print (cmd)
+    #print (cmd)
     temp_states[0][0] = int(cmd[2]) #set drawer status of 1st drawer to the 2nd char of the reply
     temp_states[1][0] = int(cmd[3]) #set item status of 1st drawer to the 3rd char of the reply
     
