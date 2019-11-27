@@ -28,6 +28,7 @@ void setup() {
   }
   analogReference(EXTERNAL);
   Serial.begin(115200);
+  Serial.println(">yeet<");
 }
 
 void loop() {
@@ -37,11 +38,11 @@ void loop() {
     voltageA[i] = analogRead(motorSenseA[i]);
     voltageB[i] = analogRead(motorSenseB[i]);
     content[i] = digitalRead(rfidPin[i]);
-//        Serial.print(state[i]);
-//        Serial.print(" ");
-//        Serial.print(voltageA[i]);
-//        Serial.print(" ");
-//        Serial.println(voltageB[i]);
+    //        Serial.print(state[i]);
+    //        Serial.print(" ");
+    //        Serial.print(voltageA[i]);
+    //        Serial.print(" ");
+    //        Serial.println(voltageB[i]);
     switch (state[i]) {
       case 0: //open
         digitalWrite(motorPinA[i], HIGH);
@@ -70,11 +71,11 @@ void loop() {
       case 2: //closed
         digitalWrite(motorPinA[i], LOW);
         digitalWrite(motorPinB[i], HIGH);
-//        if (voltageB[i] < 900 && millis() - timer[i] > 500) {
-//          state[i] = 5;
-//          timer[i] = millis();
-//          //Serial.println("2 -> 5");
-//        }
+        //        if (voltageB[i] < 900 && millis() - timer[i] > 500) {
+        //          state[i] = 5;
+        //          timer[i] = millis();
+        //          //Serial.println("2 -> 5");
+        //        }
         if (target[i] == 1) {
           state[i] = 3;
           //Serial.println("2 -> 3 (ext)");
@@ -146,10 +147,10 @@ void loop() {
 }
 
 void receive_command() {
-  char cmd[6];
-  cmd[5] = '\0';
+  char cmd[5];
+  cmd[4] = '\0';
   if (Serial.available()) {
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 4; i++) {
       char temp = Serial.read();
       delay(10);
       cmd[i] = temp;
@@ -159,7 +160,7 @@ void receive_command() {
       Serial.println(cmd);
       int tgt = cmd[1] - '1';
       //Serial.println(tgt);
-      if (tgt <= numMotors) {
+      if (tgt < numMotors) {
         switch (cmd[2]) {
           case 'o': //open drawer
             target[tgt] = 1;
@@ -172,13 +173,26 @@ void receive_command() {
           case 'i': //info about current state of drawer
             Serial.print('>');
             Serial.print(tgt + 1);
-            Serial.print(state[tgt]);
+            if (state[tgt] == 0 || state[tgt] == 6)
+              Serial.print(1);
+            else Serial.print(0);
             Serial.print(content[tgt]);
             Serial.println('<');
             break;
         }
       }
-      else{
+      else if (tgt <= 3) {
+        switch (cmd[2]) {
+          case 'i': //info about current state of drawer
+            Serial.print('>');
+            Serial.print(tgt + 1);
+            Serial.print(0);
+            Serial.print(0);
+            Serial.println('<');
+            break;
+        }
+      }
+      else {
         Serial.println(">000<"); //code for "drawer does not exist"
       }
     }

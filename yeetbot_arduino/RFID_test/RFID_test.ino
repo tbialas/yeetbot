@@ -21,6 +21,7 @@ byte cc = 0;
 unsigned long codes[6];
 unsigned int seriess[6];
 unsigned int strength[6];
+unsigned long timer2 = millis();
 //SoftwareSerial rcv(7, 8);
 
 void next_coil();
@@ -56,7 +57,7 @@ void loop() {
       timer = micros();
     }
   }
-  if (i >= 256 || micros() - timer > 1000000) {
+  if (i >= 256 || micros() - timer > 50000) {
     //    for (int j = 0; j < 256; j++) {
     //      Serial.print(history[j]);
     //      Serial.print(" ");
@@ -194,6 +195,9 @@ START:
       else {
         Serial.println("No tag found!");
       }
+      Serial.print("Time elapsed: ");
+      Serial.println(millis() - timer2);
+      timer2 = millis();
       Serial.println("><><><><><><><><><><><><><><><><><><><><");
       if ((seriess[mx] == tagSe && codes[mx] == tagNo)
           || (seriess[mx] == tagSe2 && codes[mx] == tagNo2)) {
@@ -239,4 +243,3 @@ void next_coil() {
   }
   //delay(500);
 }
-
