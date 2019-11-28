@@ -1,6 +1,6 @@
 <launch>
     <node name="gui" pkg="yeetbot_gui" type="yeet.py"/>
     <node name="master" pkg="yeetbot_master_controller" type="master.py"/>
-    <node name="pose_estimator" pkg="yeetbot_localization"
+    <node name="pose_estimator" pkg="yeetbot_localisation"
           type="tag_pose_estimation.py"/>
 </launch>
