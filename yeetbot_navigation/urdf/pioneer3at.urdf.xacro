@@ -185,11 +185,17 @@ name="pioneer3at">
                        izz="0.0001" />
           </inertial>
         </link> 
-        <joint name="frame_camera_joint" type="fixed">
-                <origin xyz="0.122 0.916 0.05" rpy="${pi * 1.5} ${pi * 0.5} 0"/>
-                <parent link="drawer_frame"/>
+
+	<joint name="base_camera_joint" type="revolute">
+  	<axis xyz="0 1 0"/>
+    <anchor xyz="0 0 0"/>
+    <limit effort="100" velocity="100" lower="${pi*-0.5}" upper="${pi*0.5}"/>
+    <joint_properties damping="0.7"/>
+                <origin xyz="0.2 0 1.193" rpy="${pi} 0 0"/>
+                <parent link="base_link"/>
                 <child link="camera_link"/>
-        </joint>
+	</joint>
+    
         <link name="camera_depth_frame">
           <inertial>
               <mass value="0.0001" />

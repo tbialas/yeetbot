@@ -7,4 +7,6 @@
     <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>
 
     <include file="$(find yeetbot_humantracker)/launch/humantracker.launch"/>
+    
+    <include file="$(find yeetbot_navigation)/launch/main_nav.launch"/>
 </launch>
