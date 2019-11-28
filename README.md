@@ -21,5 +21,9 @@ Required Software:
  - [ROS Melodic](http://wiki.ros.org/melodic)
  - [rosaria](http://wiki.ros.org/ROSARIA/Tutorials/How%20to%20use%20ROSARIA)
  - [apriltag_ros](http://wiki.ros.org/apriltag_ros)
+ - [libfreenect](https://openkinect.org/wiki/Main_Page)
+ - [freenect_launch](http://wiki.ros.org/freenect_launch)
+ - [tensorflow](https://www.tensorflow.org/)
+ - [opencv](https://opencv.org/)
 
 ##### yeet
