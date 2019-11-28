@@ -176,7 +176,28 @@ Visualization Manager:
           Show Axes: false
           Show Trail: false
           Value: true
+        tag0:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        tag1:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        tag2:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+        tag3:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
         top_plate:
+          Alpha: 1
+          Show Axes: false
+          Show Trail: false
+          Value: true
+        yeet_box:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -244,7 +265,17 @@ Visualization Manager:
           Value: true
         p3at_front_right_wheel:
           Value: true
+        tag0:
+          Value: true
+        tag1:
+          Value: true
+        tag2:
+          Value: true
+        tag3:
+          Value: true
         top_plate:
+          Value: true
+        yeet_box:
           Value: true
       Marker Scale: 0.20000000298023224
       Name: TF
@@ -289,6 +320,15 @@ Visualization Manager:
                   lidar_link:
                     laser:
                       {}
+              yeet_box:
+                tag0:
+                  {}
+                tag1:
+                  {}
+                tag2:
+                  {}
+                tag3:
+                  {}
       Update Interval: 0
       Value: true
     - Alpha: 1
@@ -446,7 +486,7 @@ Visualization Manager:
       Radius: 0.029999999329447746
       Shaft Diameter: 0.10000000149011612
       Shaft Length: 0.10000000149011612
-      Topic: /move_base/NavfnROS/plan
+      Topic: /move_base/TrajectoryPlannerROS/global_plan
       Unreliable: false
       Value: true
   Enabled: true

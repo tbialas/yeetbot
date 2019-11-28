@@ -9,6 +9,7 @@ planner_patience: 5.0
 oscillation_timeout: 10.0
 oscillation_distance: 0.2
 
+base_local_planner: "dwa_local_planner/DWAPlannerROS"
 
 recovery_behaviors:
   - name: 'conservative_reset'
@@ -18,6 +19,8 @@ recovery_behaviors:
 
 conservative_reset:
   reset_distance: 0.1
+  layer_names: ['obstacle_layer']
 
 aggressive_reset:
   reset_distance: 0.0
+  layer_names: ['obstacle_layer']

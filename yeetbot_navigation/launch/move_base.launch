@@ -12,8 +12,9 @@
 	    	<rosparam file="$(find yeetbot_navigation)/costmaps/costmap_common_params.yaml" command="load" ns="local_costmap" />
     		<rosparam file="$(find yeetbot_navigation)/costmaps/local_costmap_params.yaml" command="load" />
     		<rosparam file="$(find yeetbot_navigation)/costmaps/global_costmap_params.yaml" command="load" /> 
-    		<rosparam file="$(find yeetbot_navigation)/planners/base_local_planner_params.yaml" command="load" />
+    		<rosparam file="$(find yeetbot_navigation)/planners/dwa_local_planner_params.yaml" command="load" />
     		<rosparam file="$(find yeetbot_navigation)/planners/global_planner_params.yaml" command="load" />
+    		<!--<rosparam file="$(find yeetbot_navigation)/params/move_base_params.yaml" command="load" />-->
  	</node>
 
 </launch> 
