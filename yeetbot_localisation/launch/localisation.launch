@@ -4,10 +4,10 @@
         <arg name="camera_info_topic" value="/door_kinect/rgb/camera_info"/>
         <arg name="name" value="apriltag_detector"/>
     </include>
-
+<!--
     <node name="pose_estimator" pkg="yeetbot_localisation"
           type="tag_pose_estimation.py"/>
-
+-->
     <node name="map_ekf" pkg="robot_localization" 
           type="ekf_localization_node" output="screen">
         <param name="frequency" value="5"/>
