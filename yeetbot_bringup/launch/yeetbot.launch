@@ -1,12 +1,6 @@
 <launch>
-    <node name="gui" pkg="yeetbot_gui" type="yeet.py"/>
-    <node name="master" pkg="yeetbot_master_controller" type="master.py"/>
-    <node name="drawer_controller" pkg="yeetbot_arduino" 
+    <node name="drawer_controller" pkg="yeetbot_arduino"
           type="drawer_node.py"/>
 
-    <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>
-
-    <include file="$(find yeetbot_humantracker)/launch/humantracker.launch"/>
-    
     <include file="$(find yeetbot_navigation)/launch/main_nav.launch"/>
 </launch>

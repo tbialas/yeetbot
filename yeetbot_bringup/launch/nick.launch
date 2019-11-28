@@ -1,0 +1,4 @@
+<launch>
+    <node name="gui" pkg="yeetbot_gui" type="yeet.py"/>
+    <node name="master" pkg="yeetbot_master_controller" type="master.py"/>
+</launch>

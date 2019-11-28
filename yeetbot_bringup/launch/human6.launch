@@ -1,0 +1,5 @@
+<launch>
+    <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>
+
+    <include file="$(find yeetbot_humantracker)/launch/humantracker.launch"/>
+</launch>
