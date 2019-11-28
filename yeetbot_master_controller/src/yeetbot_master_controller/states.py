@@ -1,9 +1,11 @@
 import rospy
 
+from std_msgs.msg import String
+
 from yeetbot_msgs.msg import YEETBotState
 from yeetbot_master_controller.interfaces import publish_state_update, text_msg_pub
 from yeetbot_master_controller.user_interface import user_interface
-from std_msgs.msg import String
+from yeetbot_master_controller.human_tracker_interface import tracker_interface
 
 
 class State:
