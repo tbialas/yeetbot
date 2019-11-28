@@ -27,7 +27,7 @@ import message_filters
 from image_geometry import PinholeCameraModel
 from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
-
+from centroidtracker import CentroidTracker
 
 import numpy as np
 import tensorflow
@@ -44,16 +44,16 @@ class ROSTensorFlow(object):
 
 
         # Setup raytracing and transform
-        cam_info = rospy.wait_for_message("/camera/rgb/camera_info", CameraInfo, timeout=None)
+        cam_info = rospy.wait_for_message("/door_kinect/rgb/camera_info", CameraInfo, timeout=None)
         self.img_proc = PinholeCameraModel()
         self.img_proc.fromCameraInfo(cam_info)
 
         self.tf_broadcaster = tf.TransformBroadcaster()
-        self.camera_frame = 'camera_rgb_optical_frame'
+        self.camera_frame = 'door_kinect_rgb_optical_frame'
 
         # Subscribe to RGB and D data topics
-        self.sub_rgb = message_filters.Subscriber("/camera/rgb/image_color", Image)
-        self.sub_d = message_filters.Subscriber("/camera/depth_registered/sw_registered/image_rect", Image)
+        self.sub_rgb = message_filters.Subscriber("/door_kinect/rgb/image_color", Image)
+        self.sub_d = message_filters.Subscriber("/door_kinect/depth_registered/sw_registered/image_rect", Image)
 
         
         # Setup publishing topics
@@ -122,6 +122,12 @@ class ROSTensorFlow(object):
         self.freq = cv2.getTickFrequency()
         self.font = cv2.FONT_HERSHEY_SIMPLEX
 
+
+        ## Setup KCF tracker
+        #self.kcf_tracker = cv2.TrackerKCF_create()
+
+        self.ct = CentroidTracker()
+
         # Callback register
         self.ts.registerCallback(self.callback)
         print('Init done')
@@ -163,11 +169,13 @@ class ROSTensorFlow(object):
             # Find people on image from Tensorflow results
             boxes_coords = list()
             center_points = list()
+            center_pointsd = list()
             depth_coords = list()
             depth_frames = list()
             depths = list()
             for i in range(int(num[0])):
                 if (int(classes[0][i]) == 1 and scores[0][i] >= 0.70): # if human detected
+
                     box = [None]*2
                     box_depth = [None]*2
                     min_y = int(boxes[0][i][0]*rgb_height) 
@@ -175,12 +183,16 @@ class ROSTensorFlow(object):
                     max_y = int(boxes[0][i][2]*rgb_height)
                     max_x = int(boxes[0][i][3]*rgb_width)
                     
+                    # ok = tracker.init(frame, min_x, min_y, max_x, max_y)
+
                     box[0] = (min_x, min_y)
                     box[1] = (max_x, max_y)
 
                     center_x = int((min_x + max_x)/2)
                     center_y = int((min_y + max_y)/2)
                     center = (center_x, center_y)
+
+
 
                     box_w = max_x - min_x
                     box_h = max_y - min_y
@@ -198,13 +210,17 @@ class ROSTensorFlow(object):
                     center_points.append(center)
 
                     depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
-                    np.nan_to_num(depth_frame, 0)
-                    depth_median = np.median(depth_frame)
+                    #np.nan_to_num(depth_frame, False, 10)
+                    depth_frame = depth_frame
+                    depth_median = np.nanmedian(depth_frame)
                     #print("TYPE")
                     #print(type(depth_frame))
                     #print(depth_frame)
                     depth_frames.append(depth_frame)
                     depths.append(depth_median)
+
+                    center_d = (center_x, center_y, depth_median)
+                    center_pointsd.append(center_d)
                     #print("OBJECT {0} HAS DEPTH {1}".format(i, depth_median))
 
             #print(depth_frame[0])
@@ -229,7 +245,14 @@ class ROSTensorFlow(object):
 
             print("FPS: {0:.2f}".format(frame_rate_calc))
 
+            objects = self.ct.update(center_pointsd.copy())
 
+        for (objectID, centroid) in objects.items():
+            text = "ID {}".format(objectID)
+            centroidx, centroidy, centroidz = centroid
+            centroidxy = (centroidx, centroidy)
+            cv2.putText(frame_color, text, (centroidx - 10, centroidy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.circle(frame_color, (centroidx, centroidy), 4, (0, 255, 0), -1)
 
         #print(boxes_coords)
         #print(depth_coords)
@@ -252,13 +275,14 @@ class ROSTensorFlow(object):
         out_pose.header.stamp = color_msg.header.stamp
         out_pose.header.frame_id = self.camera_frame
         poses1 = list()
-        for i in range(len(center_points)):
-            print("OBJECT {0} AT {1} DEPTH {2}".format(i, center_points[i], depths[i]))
-            x, y, _ = self.img_proc.projectPixelTo3dRay(center_points[i])
+        for (objectID, centroid) in objects.items():
+            centroidx, centroidy, centroidz = centroid
+            print("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
+            x, y, _ = self.img_proc.projectPixelTo3dRay((centroidx, centroidy))
             print(x)
             print(y)
             
-            z = depths[i]
+            z = (centroidz)
             print(z)
             self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
             
