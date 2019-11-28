@@ -1,0 +1,20 @@
+<launch>
+
+ 	<!-- Run the map server --> 
+    <node pkg="map_server" type="map_server" name="map_server" args="$(find yeetbot_navigation)/maps/505_gen2.yaml" />
+
+	 <!--- Run AMCL --> 
+    	<!-- <include file="$(find amcl)/examples/amcl_omni.launch" /> -->
+    <node pkg="tf" type="static_transform_publisher" name="tf_pub" args="0 0 0 0 0 0  /map /odom  100"/>
+   	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+    		<remap from="/move_base/NavfnROS/plan" to="/nope"/>
+            <rosparam file="$(find yeetbot_navigation)/costmaps/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
+	    	<rosparam file="$(find yeetbot_navigation)/costmaps/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    		<rosparam file="$(find yeetbot_navigation)/costmaps/local_costmap_params.yaml" command="load" />
+    		<rosparam file="$(find yeetbot_navigation)/costmaps/global_costmap_params.yaml" command="load" /> 
+    		<rosparam file="$(find yeetbot_navigation)/planners/base_local_planner_params.yaml" command="load" />
+    		<rosparam file="$(find yeetbot_navigation)/planners/global_planner_params.yaml" command="load" />
+    		<rosparam file="$(find yeetbot_navigation)/params/recovery_behaviors.yaml" command="load" />
+ 	</node>
+
+</launch> 

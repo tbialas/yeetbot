@@ -1,0 +1,4 @@
+<launch>
+4     <include file="$(find yeetbot_navigation)/launch/move_base.launch"/>
+4     <include file="$(find yeetbot_navigation)/launch/yeetbot_nav.launch"/>
+</launch>

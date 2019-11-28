@@ -1,9 +1,17 @@
+from math import sqrt
+
 import rospy
+
+from std_msgs.msg import String
+from geometry_msgs.msg import PoseStamped
 
 from yeetbot_msgs.msg import YEETBotState
 from yeetbot_master_controller.interfaces import publish_state_update, text_msg_pub
 from yeetbot_master_controller.user_interface import user_interface
-from std_msgs.msg import String
+from yeetbot_master_controller.human_tracker_interface import tracker_interface
+from yeetbot_master_controller.item_database import item_database
+from yeetbot_master_controller import navigation_interface
+from navigation_interface import nav_interface
 
 
 class State:
@@ -44,14 +52,33 @@ class Travelling(State):
     def __init__(self):
         publish_state_update(YEETBotState.TRAVELLING)
 
+        self.current_goal = PoseStamped()
+        nav_interface.goto_pos(self.current_goal)
+
+        self.state = navigation_interface.ACTIVE
+
+    def goal_distance(self, target_pose):
+        dx = target_pose.pose.position.x - self.current_goal.pose.position.x
+        dy = target_pose.pose.position.y - self.current_goal.pose.position.y
+        return sqrt(dx*dx + dy*dy)
+
     def run(self):
-        # TODO: Interface with the navigation stuff and attempt to move to 
-        # the required location
+        target_pose = PoseStamped()
+
+        if self.goal_distance(target_pose) >= 2:
+            self.current_goal = target_pose
+            nav_interface.goto_pos(self.current_goal)
+
+        self.state = nav_interface.get_state()
+
         return "Travelling"
 
     def next(self, input_array):
-        if input_array['target_reached'] == 1:
+        if state == navigation_interface.SUCCEEDED:
             return VerifyRequest('')
+        elif state == navigation_interface.NOTHING:
+            # TODO: Ask for help!
+            return Idle()
         else:
             return self
 
@@ -113,8 +140,17 @@ class LendTool(State):
             raise RuntimeError("Unknown tool {}".format(tool))
         
         speech_msg = String()
-        speech_msg.data = "Please take the {} from the drawer that I am opening for you.".format(tool.replace('_', ' '))
+        if item_database.contains_tool(tool):
+            speech_msg.data = "Please take the {} from the drawer that I am opening for you.".format(tool.replace('_', ' '))
+            item_database.change_drawer_state(tool, True)
+            self.false_request = False
+        else:
+            speech_msg.data = "I'm sorry, I don't have that tool in stock. Perhaps you could return it to me?"
+            self.false_request = True
+
         text_msg_pub.publish(speech_msg)
+        
+        self.tool = tool
 
         user_interface.tool_requested = ''
         user_interface.user_requested_borrow = False
@@ -126,9 +162,15 @@ class LendTool(State):
 
     def next(self, input_array):
         if input_array['tool_removed'] == 1:
+            item_database.tool_taken = False
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         dur = rospy.Time.now() - self.time_started
+        if self.false_request:
+            if dur.secs > 5:
+                return Idle()
         if dur.secs > 15:
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         return self
 
@@ -142,10 +184,19 @@ class ReturnTool(State):
         if(tool != 'pliers' and tool != 'screw_driver'
            and tool != 'wire_strippers' and tool != 'vernier_calipers'):
             raise RuntimeError("Unknown tool {}".format(tool))
-        
+
         speech_msg = String()
-        speech_msg.data = "Please return the {} to the drawer that I am opening for you.".format(tool.replace('_', ' '))
+        if item_database.is_tool_missing(tool):
+            speech_msg.data = "Please return the {} to the drawer that I am opening for you.".format(tool.replace('_', ' '))
+            item_database.change_drawer_state(tool, True)
+            self.false_request = False
+        else:
+            speech_msg.data = "I'm not missing any of those!"
+            self.false_request = True
+
         text_msg_pub.publish(speech_msg)
+
+        self.tool = tool
 
         user_interface.tool_requested = ''
         user_interface.user_requested_borrow = False
@@ -157,15 +208,22 @@ class ReturnTool(State):
 
     def next(self, input_array):
         if input_array['tool_replaced'] == 1:
+            item_database.tool_returned = False
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         dur = rospy.Time.now() - self.time_started
+        if self.false_request:
+            if dur.secs > 5:
+                return Idle()
         if dur.secs > 15:
+            item_database.change_drawer_state(self.tool, False)
             return Idle()
         return self
 
 
-class ForceReturn(State):
+class ForceReturn(Travelling):
     def __init__(self):
+        super(Travelling, self).__init__()
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
 
     def run(self):

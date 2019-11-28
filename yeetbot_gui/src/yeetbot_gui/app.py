@@ -1,5 +1,8 @@
 from PyQt4 import QtGui, QtCore
-import queue
+try:
+    import queue
+except ImportError:
+    import Queue as queue
 
 from yeetbot_gui.asset_finder import AssetFinder
 from yeetbot_gui.button_option import ButtonOption

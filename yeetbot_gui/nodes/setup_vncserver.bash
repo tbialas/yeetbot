@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 sudo apt update
 sudo apt install tightvncserver -y
+sudo apt install python-qt4-dev
 tightvncserver
 
 rm ~/.vnc/xstartup
