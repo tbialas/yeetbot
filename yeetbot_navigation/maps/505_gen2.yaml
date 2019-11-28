@@ -1,0 +1,6 @@
+image: /home/benubu/catkin_ws/src/yeetbot/yeetbot_navigation/maps//505_gen2.pgm
+resolution: 0.050000
+origin: [-2,-3, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
