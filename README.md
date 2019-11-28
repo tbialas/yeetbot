@@ -20,5 +20,6 @@ YEETBot3000 is a robot designed to interact with humans who are using the ICRS (
 Required Software:
  - [ROS Melodic](http://wiki.ros.org/melodic)
  - [rosaria](http://wiki.ros.org/ROSARIA/Tutorials/How%20to%20use%20ROSARIA)
+ - [apriltag_ros](http://wiki.ros.org/apriltag_ros)
 
 ##### yeet
