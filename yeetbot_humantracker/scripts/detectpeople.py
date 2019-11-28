@@ -44,16 +44,16 @@ class ROSTensorFlow(object):
 
 
         # Setup raytracing and transform
-        cam_info = rospy.wait_for_message("/camera/rgb/camera_info", CameraInfo, timeout=None)
+        cam_info = rospy.wait_for_message("/door_kinect/rgb/camera_info", CameraInfo, timeout=None)
         self.img_proc = PinholeCameraModel()
         self.img_proc.fromCameraInfo(cam_info)
 
         self.tf_broadcaster = tf.TransformBroadcaster()
-        self.camera_frame = 'camera_rgb_optical_frame'
+        self.camera_frame = 'door_kinect_rgb_optical_frame'
 
         # Subscribe to RGB and D data topics
-        self.sub_rgb = message_filters.Subscriber("/camera/rgb/image_color", Image)
-        self.sub_d = message_filters.Subscriber("/camera/depth_registered/sw_registered/image_rect", Image)
+        self.sub_rgb = message_filters.Subscriber("/door_kinect/rgb/image_color", Image)
+        self.sub_d = message_filters.Subscriber("/door_kinect/depth_registered/sw_registered/image_rect", Image)
 
         
         # Setup publishing topics
