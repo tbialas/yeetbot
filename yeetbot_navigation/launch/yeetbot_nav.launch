@@ -1,0 +1,23 @@
+<launch>
+	<!-- sensors -->
+	<include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch" />
+   	<node pkg="urg_node" type="urg_node" name="urg_node">
+ 	</node>
+
+	<!-- base driver + odom (needs imu)-->
+	<node pkg="p2os_urdf" type="p2os_publisher_3at" name="p2os_publisher_3at" />
+   	<node pkg="p2os_driver" type="p2os_driver" name="p2os_driver">
+		<remap from="/pose" to="/nav_msgs/Odometry" />
+		<param name="~port" value="/dev/ttyUSB0" type="str"/>
+		<param name="~pulse" value="1.0"/>
+ 	</node>
+
+	<!-- map server -->
+	<node pkg="map_server" type="map_server" name="map_server" args="$(find yeetbot_navigation)/maps/505_gen2.yaml" />
+
+	<!-- urdf -->
+	<param name="robot_description" command="$(find xacro)/xacro.py $(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro" />
+        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>
+</launch>
