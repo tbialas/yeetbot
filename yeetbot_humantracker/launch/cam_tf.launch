@@ -1,0 +1,3 @@
+<launch>
+	<node pkg="tf" type="static_transform_publisher" name="cam_d" args="0 0 0 0 0 0 /camera_rgb_optical_frame /camera_depth_optical_frame 100" />
+</launch>
