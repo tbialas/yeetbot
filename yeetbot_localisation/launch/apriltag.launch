@@ -1,6 +1,7 @@
 <launch>
     <arg name="image_topic" default="/camera/rgb/image_color"/>
     <arg name="camera_info_topic" default="/camera/rgb/camera_info"/>
+    <arg name="camera_frame" default="camera_rgb_optical_frame"/>
     <arg name="name" default="apriltag_detector"/>
 
     <rosparam command="load" file="$(find yeetbot_localisation)/config/settings.yaml" ns="$(arg name)" />
@@ -11,5 +12,6 @@
         <!-- Pass in the image and camera info from the kinect -->
         <remap from="image_rect" to="$(arg image_topic)"/>
         <remap from="camera_info" to="$(arg camera_info_topic)"/>
+        <param name="camera_frame" value="$(arg camera_frame)"/>
     </node>
 </launch>

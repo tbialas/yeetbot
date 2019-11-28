@@ -9,5 +9,5 @@ tag_blur:          0.4        # default: 0.0
 tag_refine_edges:  1          # default: 1
 tag_debug:         0          # default: 0
 # Other parameters
-publish_tf:        true       # default: false
+publish_tf:        false      # default: false
 publish_tag_detections_image: true
