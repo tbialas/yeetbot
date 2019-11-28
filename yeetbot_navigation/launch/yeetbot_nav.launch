@@ -1,23 +1,31 @@
 <launch>
 	<!-- sensors -->
-	<include file="$(find freenect_launch)/launch/examples/freenect-registered-xyzrgb.launch" />
+    <include file="$(find freenect_launch)/launch/examples/freenect-xyz.launch" />
+    <include file="$(find yeetbot_navigation)/launch/fake_laser.launch"/>
+   <node pkg="rostopic" type="rostopic" name="kin_ang_pub" args="pub /set_tilt_degree std_msgs/Int16 '{data: -20}' -r 1"/>
+    <node pkg="yeetbot_navigation" type="laser_nan_node.py" name="laser_nan"/>
    	<node pkg="urg_node" type="urg_node" name="urg_node">
+        <param name="angle_min" value="-1.7453"/>
+        <param name="angle_max" value="1.7453"/>
  	</node>
 
 	<!-- base driver + odom (needs imu)-->
-	<node pkg="p2os_urdf" type="p2os_publisher_3at" name="p2os_publisher_3at" />
-   	<node pkg="p2os_driver" type="p2os_driver" name="p2os_driver">
-		<remap from="/pose" to="/nav_msgs/Odometry" />
+	<!--<node pkg="p2os_urdf" type="p2os_publisher_3at" name="p2os_publisher_3at">-->
+    <node name="kinect_cam_state_pub" pkg="yeetbot_navigation" type="kinect_joint_pub.py"/>
+    <node pkg="joint_state_publisher" type="joint_state_publisher" name="joint_pub_boi">
+        <param name="robot_description" command="$(find xacro)/xacro.py $(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro" />
+        <rosparam param="source_list">[kinect_state]</rosparam>
+    </node>	
+    <node pkg="p2os_driver" type="p2os_driver" name="p2os_driver">
+		<!-- <remap from="/pose" to="/nav_msgs/Odometry" /> -->
 		<param name="~port" value="/dev/ttyUSB0" type="str"/>
 		<param name="~pulse" value="1.0"/>
  	</node>
-
-	<!-- map server -->
-	<node pkg="map_server" type="map_server" name="map_server" args="$(find yeetbot_navigation)/maps/505_gen2.yaml" />
+    
 
 	<!-- urdf -->
 	<param name="robot_description" command="$(find xacro)/xacro.py $(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro" />
-        <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
+    <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
 	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>
 </launch>
