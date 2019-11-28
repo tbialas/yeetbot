@@ -15,4 +15,5 @@
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>apriltag_ros</depend>
+  <depend>robot_localization</depend>
 </package>
