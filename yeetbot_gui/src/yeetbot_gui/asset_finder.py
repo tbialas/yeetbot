@@ -16,6 +16,8 @@ class AssetFinder:
         self.find_asset('wave'        , 'toolbot_wave.gif'        )
         self.find_asset('jump'        , 'toolbot_happy_jump.gif'  )
         self.find_asset('kawaii'      , 'toolbot_kawaii.gif'      )
+        self.find_asset('background'  , 'background.png'          )
+        self.find_asset('speech'      , 'speech_bubble.png'       )
 
     def find_asset(self, name, file_name):
         if name in self.__asset_map.keys():
