@@ -1,10 +1,17 @@
 <launch>
     <arg name="kinect_name" default="door_kinect"/>
-    <include file="$(find freenect_launch)/launch/freenect.launch">
-        <arg name="camera" value="$(arg kinect_name)"/>
-    </include>
     <group if="$(eval arg('kinect_name') == 'door_kinect')">
+        <include file="$(find freenect_launch)/launch/freenect.launch">
+    	    <arg name="camera" value="door_kinect"/>
+        </include>
         <node pkg="tf" type="static_transform_publisher" name="cam_d" args="0 0 0 0 0 0 /door_kinect_rgb_optical_frame /door_kinect_depth_optical_frame 100" />
+    </group>
+    <group if="$(eval arg('kinect_name') == 'window_kinect')">
+        <include file="$(find kinect2_bridge)/launch/kinect2_bridge.launch">
+            <arg name="base_name" value="window_kinect"/>
+            <arg name="base_name_tf" value="window_kinect"/>
+            <arg name="publish_tf" value="true"/>
+        </include>
     </group>
     <!-- <include file="$(find yeetbot_humantracker)/launch/cam_tf.launch"/> -->
     <node name="$(arg kinect_name)_humantracker" pkg="yeetbot_humantracker" type="detectpeople.py"/>
