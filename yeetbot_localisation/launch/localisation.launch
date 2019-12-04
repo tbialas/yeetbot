@@ -1,10 +1,13 @@
 <launch>
+    <!-- Commented out as these run on a different machine to the ekf
+         nodes -->
+<!--
     <include file="$(find yeetbot_localisation)/launch/apriltag.launch">
         <arg name="image_topic" value="/door_kinect/rgb/image_color"/>
         <arg name="camera_info_topic" value="/door_kinect/rgb/camera_info"/>
         <arg name="name" value="apriltag_detector"/>
     </include>
-<!--
+
     <node name="pose_estimator" pkg="yeetbot_localisation"
           type="tag_pose_estimation.py"/>
 -->
