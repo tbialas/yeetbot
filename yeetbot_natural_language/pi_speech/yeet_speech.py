@@ -16,6 +16,7 @@ def init():
     global state
     global inventory
     global ros_buffer
+    global buffer_lock
 
     #serial port initialise and handshake
     computer = serial.Serial(
@@ -34,6 +35,7 @@ def init():
     state = 0
     inventory = []
     ros_buffer = deque()
+    buffer_lock = multiprocessing.Lock()
 
     #initialise thread for listening to computer and reading buffer
     port = multiprocessing.Process(target=listen_serial)
@@ -48,20 +50,23 @@ def listen_serial():
         cmd = ''
         cmd = computer.read_until("<", timeout=0.5)
         if cmd:
-            ros_buffer.append([cmd])
+            with buffer_lock:
+                ros_buffer.append([cmd])
 
 def read_ros_buffer():
     while True:
-        if ros_buffer:
-            msg = ros_buffer.popleft()
-            update_states(msg)
-        else:
-            time.sleep(0.3)
+        with buffer_lock:
+            if ros_buffer:
+                msg = ros_buffer.popleft()
+                update_states(msg)
+            else:
+                continue
+        time.sleep(0.3)
 
 def update_states(msg):
     global state
     global inventory
-    
+
     topic, msg = msg[:3], msg[3:-1]
     
     #inventory update
