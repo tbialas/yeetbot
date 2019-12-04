@@ -21,7 +21,7 @@ def tag_detection_cb(tag_array):
             'map', tag_array.header.frame_id, rospy.Time(0))
     except (tf.LookupException, tf.ConnectivityException, 
             tf.ExtrapolationException):
-        print "Failed to transform frame '" + tag_array.header.frame_id + "'... Discarding whole message!"
+        rospy.logwarn("Failed to transform frame '" + tag_array.header.frame_id + "'... Discarding whole message!")
         return
 
     T = tf.transformations.translation_matrix(cam_trans)
@@ -31,14 +31,15 @@ def tag_detection_cb(tag_array):
     m_T_c = tf.transformations.concatenate_matrices(T, R)
 
     for det in tag_array.detections:
-        tag_frame = 'tag_' + str(det.id[0])
+        tag_frame = 'tag' + str(det.id[0])
         # Get the transform from the tag frame to the base_link frame
         try:
             (trans, rot) = tf_listener.lookupTransform(
                 tag_frame, 'base_link', rospy.Time(0))
         except (tf.LookupException, tf.ConnectivityException, 
-                tf.ExtrapolationException):
-            print "Failed to transform frame '" + tag_frame + "'... Discarding data."
+                tf.ExtrapolationException) as e:
+            rospy.logwarn("Failed to transform frame '" + tag_frame + "'... Discarding data.")
+            rospy.logerr(e)
             continue
 
         T = tf.transformations.translation_matrix(trans)
