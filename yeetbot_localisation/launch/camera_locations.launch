@@ -1,6 +1,6 @@
 <launch>
     <node name="kinect_1" type="static_transform_publisher" pkg="tf"
-          args="2.95 5.15 2.0 0 -0.28 5.15 map door_kinect 50"/>
+          args="2.95 5.15 2.0 5.15 -0.38 0 map door_kinect_link 50"/>
     <node name="kinect_2" type="static_transform_publisher" pkg="tf"
-          args="7.85 -2.15 1.95 0 -0.26 2.36 map window_kinect 50"/>
+          args="7.85 -2.15 1.95 2.56 -0.26 0 map window_kinect_link 50"/>
 </launch>
