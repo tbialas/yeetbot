@@ -1,5 +1,11 @@
 <launch>
-    <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>
+    <include file="$(find yeetbot_localisation)/launch/apriltag.launch">
+        <arg name="image_topic" value="/door_kinect/rgb/image_color"/>
+        <arg name="camera_info_topic" value="/door_kinect/rgb/camera_info"/>
+        <arg name="name" value="human6_tag_detector"/>
+    </include>
 
-    <include file="$(find yeetbot_humantracker)/launch/humantracker.launch"/>
+    <include file="$(find yeetbot_humantracker)/launch/humantracker.launch">
+        <arg name="kinect_name" value="door_kinect"/>
+    </include>
 </launch>
