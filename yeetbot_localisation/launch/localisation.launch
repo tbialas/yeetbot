@@ -4,6 +4,9 @@
         <arg name="camera_info_topic" value="/door_kinect/rgb/camera_info"/>
         <arg name="name" value="apriltag_detector"/>
     </include>
+
+    <!-- Commented out as this is run on a different machine to the other
+         nodes -->
 <!--
     <node name="pose_estimator" pkg="yeetbot_localisation"
           type="tag_pose_estimation.py"/>
