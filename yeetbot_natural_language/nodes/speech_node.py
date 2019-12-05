@@ -13,16 +13,17 @@ def init():
 
     #serial setup and handshake
     pi = serial.Serial(
-        port = '/dev/ttyUSB0',
-        baudrate=115200)
+        port = '/dev/ttyACM0',
+        baudrate=115200,
+        timeout=0.5)
     done = 0
-    pi.open()
     while not done:
+        print "Setup"
         cmd = pi.read_until("<")
-    if cmd == ">yeet<":
-        done = 1
-    else:
-        print("Unexpected: '",cmd,"' from speech pi")
+        if cmd == ">yeet<":
+            done = 1
+        else:
+            print("Unexpected: '",cmd,"' from speech pi")
     pi.write(">ack<")
 
     state = 0
@@ -45,9 +46,11 @@ def stateCallback(yeetbot_state):
     pi.write(serial_state)
 
 def main():
-    
+    global pi
+    init()
     while not rospy.is_shutdown():
-        cmd = pi.read_until("<", timeout=0.5)
+        print "Waiting for input..."
+        cmd = pi.read_until("<")
         if cmd:
             msg = YEETBotUserResponse()
             topic, serial_info = cmd[:3], cmd[3:-1]
