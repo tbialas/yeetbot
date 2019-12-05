@@ -12,6 +12,7 @@ from yeetbot_master_controller.interfaces import battery_voltage
 
 
 BATTERY_LOW_VOLTAGE = 11.3
+YEET_REQUEST_TIMEOUT = 1.5
 
 
 def main():
@@ -25,13 +26,12 @@ def main():
 
     print "Item Database ready"
 
-    input_array = { 'yeet_request':0, # Not Done
+    input_array = { 'yeet_request':0, # Done
                     'tool_timeout':0, # Done
                     'request':'', # Done
                     'request_verified':0, # Done
                     'tool_removed':0, # Done
                     'tool_replaced':0, # Done
-                    'target_set':0, # Not Done
                     'low_voltage':0 } # Done
 
     while not rospy.is_shutdown():
@@ -73,6 +73,13 @@ def main():
             input_array['low_voltage'] = 1
         else:
             input_array['low_voltage'] = 0
+
+        # Check for yeet requests
+        dur = rospy.Time.now() - tracker_interface.voice_update_time
+        if dur.secs + dur.nsecs * 1e9 < YEET_REQUEST_TIMEOUT:
+            input_array['yeet_request'] = 1
+        else:
+            input_array['yeet_request'] = 0
 
         # Sleep
         rate.sleep()
