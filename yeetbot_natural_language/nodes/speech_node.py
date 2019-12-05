@@ -18,7 +18,6 @@ def init():
         timeout=0.5)
     done = 0
     while not done:
-        print "Setup"
         cmd = pi.read_until("<")
         if cmd == ">yeet<":
             done = 1
@@ -28,7 +27,7 @@ def init():
 
     state = 0
     inventory = []
-    rospy.init_node('yeet_speech', anonymous=True)
+    rospy.init_node('yeet_speech')
     pub = rospy.Publisher("/user_response", YEETBotUserResponse, queue_size=10)
     rospy.Subscriber("/user_choices", YEETBotUserChoices, choiceCallback)
     rospy.Subscriber("/yeetbot_state", YEETBotState, stateCallback) 
@@ -47,9 +46,10 @@ def stateCallback(yeetbot_state):
 
 def main():
     global pi
+    print "Setting up..."
     init()
+    print "Setup completed"
     while not rospy.is_shutdown():
-        print "Waiting for input..."
         cmd = pi.read_until("<")
         if cmd:
             msg = YEETBotUserResponse()
@@ -60,6 +60,7 @@ def main():
                 msg.choice = int(serial_info[0])
                 msg.invalid_choice = True if serial_info[1] == "t" else False
                 pub.publish(msg)
+                rospy.loginfo(msg)
 
     pi.write("quit")
 
