@@ -17,19 +17,22 @@ def init():
     global inventory
     global ros_buffer
     global buffer_lock
+    global read_buffer
+    global port
 
     #serial port initialise and handshake
     computer = serial.Serial(
         port = '/dev/ttyACM0',
         baudrate=115200,
         timeout=0.5)
-    computer.write(">yeet<")
     
     done = 0
     while not done:
-        cmd = computer.read_until(">ack<")
-        if cmd == ">ack<":
+        cmd = computer.read_until(">yeet<")
+        if cmd == ">yeet<":
             done = 1
+
+    computer.write(">ack<")
 
     #initialise ros variables
     state = 0
@@ -82,52 +85,56 @@ def listen_wake_word():
 def wait_for_input():
     delay = raw_input("input anything for YEETBot to listen; to quit input 'quit'\n")
     if delay == "quit":
+        port.terminate()
+        read_buffer.terminate()
+        read_buffer.join()
+        port.terminate()
+        port.join()
         sys.exit()
 
 def record_speech():
-    if state == 1:
-        print("listening...\n")
-        subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "16000", "-d", "3"])
+    print("listening...\n")
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "16000", "-d", "3"])
 
 def transcribe_file(speech_file):
-    if state == 1:
-        client = speech.SpeechClient()
+    client = speech.SpeechClient()
 
-        with io.open(speech_file, 'rb') as audio_file:
-            content = audio_file.read()
+    with io.open(speech_file, 'rb') as audio_file:
+        content = audio_file.read()
 
-        audio = types.RecognitionAudio(content=content)
-        config = types.RecognitionConfig(
-            encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-            sample_rate_hertz=16000,
-            language_code='en-GB')
+    audio = types.RecognitionAudio(content=content)
+    config = types.RecognitionConfig(
+        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+        sample_rate_hertz=16000,
+        language_code='en-GB')
 
-        response = client.recognize(config, audio)
+    response = client.recognize(config, audio)
 
-        #over serial, user response composed as ">u/[choice],[invalid_choice]"
-        for result in response.results:
-            sentence = result.alternatives[0].transcript.split()
-            serial_user_response = ">u/"
-            if "return" in sentence:
-                serial_user_response += "-1,f"
-            else:
-                invalid_choice = True
-                for word in sentence:
-                    for tool in inventory:
-                        if word == tool:
-                            serial_user_response += str(inventory.index(tool)) + ","
-                            invalid_choice = False
-                serial_user_response += "t" if invalid_choice else "f"
-            serial_user_response += "<"
+    #over serial, user response composed as ">u/[choice],[invalid_choice]"
+    for result in response.results:
+        sentence = result.alternatives[0].transcript.split()
+        serial_user_response = ">u/"
+        if "return" in sentence:
+            serial_user_response += "-1,f"
+        else:
+            invalid_choice = True
+            for word in sentence:
+                for tool in inventory:
+                    if word == tool:
+                        serial_user_response += str(inventory.index(tool)) + ","
+                        invalid_choice = False
+            serial_user_response += "t" if invalid_choice else "f"
+        serial_user_response += "<"
 
-        computer.write(serial_user_response)
+    computer.write(serial_user_response)
 
 def main():
     init()
     while True:
         wait_for_input()
-        record_speech()
-        transcribe_file("recording.wav")
+        if state == 0:
+            record_speech()
+            transcribe_file("recording.wav")
 
 if __name__ == '__main__':
     main()
