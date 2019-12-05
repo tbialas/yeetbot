@@ -17,14 +17,16 @@ def init():
         baudrate=115200,
         timeout=0.5)
     done = 0
+
+    pi.write(">yeet<")
+
     while not done:
         cmd = pi.read_until("<")
-        if cmd == ">yeet<":
+        if cmd == ">ack<":
             done = 1
         else:
             print("Unexpected: '",cmd,"' from speech pi")
-    pi.write(">ack<")
-
+    
     state = 0
     inventory = []
     rospy.init_node('yeet_speech')
