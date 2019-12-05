@@ -1,4 +1,4 @@
-from math import sqrt
+from math import sqrt, cos, sin
 
 import rospy
 
@@ -12,6 +12,11 @@ from yeetbot_master_controller.human_tracker_interface import tracker_interface
 from yeetbot_master_controller.item_database import item_database
 from yeetbot_master_controller import navigation_interface
 from navigation_interface import nav_interface
+
+
+HOME_X = 3.45
+HOME_Y = 4.15
+HOME_YAW = -3.14 / 2
 
 
 class State:
@@ -32,11 +37,15 @@ class Idle(State):
 
         user_interface.idle_screen_choices()
 
+        self.start_time = rospy.Time.now()
+
     def run(self):
         return "Idle"
 
     def next(self, input_array):
-        if input_array['yeet_request'] == 1:
+        if input_array['low_voltage'] == 1:
+            return LowVoltage()
+        elif input_array['yeet_request'] == 1:
             return Travelling()
         elif input_array['tool_timeout'] == 1:
             return ForceReturn()
@@ -45,14 +54,17 @@ class Idle(State):
         elif input_array['request'] == 'return':
             return VerifyRequest('return')
         else:
+            dur = rospy.Time.now() - self.start_time
+            if dur.secs > 15:
+                return ReturnHome()
             return self
 
 
 class Travelling(State):
-    def __init__(self):
+    def __init__(self goal=PoseStamped()):
         publish_state_update(YEETBotState.TRAVELLING)
 
-        self.current_goal = PoseStamped()
+        self.current_goal = goal
         nav_interface.goto_pos(self.current_goal)
 
         self.state = navigation_interface.ACTIVE
@@ -63,7 +75,8 @@ class Travelling(State):
         return sqrt(dx*dx + dy*dy)
 
     def run(self):
-        target_pose = PoseStamped()
+        # TODO: Update this if necessary?
+        target_pose = self.current_goal
 
         if self.goal_distance(target_pose) >= 2:
             self.current_goal = target_pose
@@ -235,5 +248,51 @@ class ForceReturn(Travelling):
     def next(self, input_array):
         if input_array['request'] == "return" and input_array['request_verified'] == 1:
             return ReturnTool()
+        else:
+            return self
+
+
+class ReturnHome(Travelling):
+    def __init__(self):
+        home = PoseStamped()
+        home.header.stamp = rospy.Time.now()
+        home.header.frame_id = 'map'
+        home.pose.position.x = HOME_X
+        home.pose.position.y = HOME_Y
+        home.pose.orientation.w = cos(HOME_YAW / 2)
+        home.pose.orientation.z = sin(HOME_YAW / 2)
+        print home
+        super(Travelling, self).__init__(goal=home)
+    
+    def run(self):
+        super(Travelling, self).run()
+
+    def next(self, input_array):
+        if input_array['low_voltage'] == 1:
+            return LowVoltage()
+        elif state == navigation_interface.SUCCEEDED:
+            return Idle()
+        elif state == navigation_interface.NOTHING:
+            return ReturnHome()
+        elif input_array['yeet_request'] == 1:
+            return Travelling()
+        elif input_array['tool_timeout'] == 1:
+            return ForceReturn()
+        else:
+            return self
+
+
+class LowVoltage(ReturnHome):
+    def __init__(self):
+        super(ReturnHome, self).__init__()
+        speech_msg = String()
+        speech_msg.data = "I am low on battery! Please help me charge myself!"
+        text_msg_pub.publish(speech_msg)
+
+    def next(self, input_array):
+        if state == navigation_interface.SUCCEEDED:
+            return Idle()
+        elif state == navigation_interface.NOTHING:
+            return LowVoltage()
         else:
             return self

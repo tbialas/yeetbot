@@ -8,6 +8,10 @@ from yeetbot_master_controller.item_database import item_database
 from yeetbot_master_controller.state_machine import StateMachine
 from yeetbot_master_controller.exceptions import NoToolsTimedOutError
 from yeetbot_master_controller.user_interface import user_interface
+from yeetbot_master_controller.interfaces import battery_voltage
+
+
+BATTERY_LOW_VOLTAGE = 11.3
 
 
 def main():
@@ -27,7 +31,8 @@ def main():
                     'request_verified':0, # Done
                     'tool_removed':0, # Done
                     'tool_replaced':0, # Done
-                    'target_set':0 } # Not Done
+                    'target_set':0, # Not Done
+                    'low_voltage':0 } # Done
 
     while not rospy.is_shutdown():
         # Update the state machine
@@ -62,6 +67,12 @@ def main():
             input_array['tool_replaced'] = 1
         else:
             input_array['tool_replaced'] = 0
+
+        # Check for low voltage from batteries
+        if battery_voltage > 0 and battery_voltage < BATTERY_LOW_VOLTAGE:
+            input_array['low_voltage'] = 1
+        else:
+            input_array['low_voltage'] = 0
 
         # Sleep
         rate.sleep()
