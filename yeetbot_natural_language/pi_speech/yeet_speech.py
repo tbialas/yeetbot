@@ -20,9 +20,9 @@ def init():
 
     #serial port initialise and handshake
     computer = serial.Serial(
-        port = '/dev/ttyUSB0',
-        baudrate=115200)
-    computer.open()
+        port = '/dev/ttyACM0',
+        baudrate=115200,
+        timeout=0.5)
     computer.write(">yeet<")
     
     done = 0
@@ -48,7 +48,7 @@ def listen_serial():
     while True:
         time.sleep(0.1)
         cmd = ''
-        cmd = computer.read_until("<", timeout=0.5)
+        cmd = computer.read_until("<")
         if cmd:
             with buffer_lock:
                 ros_buffer.append([cmd])
