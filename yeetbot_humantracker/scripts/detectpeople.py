@@ -41,25 +41,56 @@ class ROSTensorFlow(object):
         #np.set_printoptions(threshold=sys.maxsize)
         # Init CV bridge
         self.cv_bridge1 = CvBridge()
+        rospy.logwarn("DETECT PEOPLE RUNNING ======================================")
+        rospy.logwarn(sys.argv)
+        if sys.argv[1] == "window":
+            self.kinect = "window"
+        elif sys.argv[1] == "door":
+            self.kinect = "door"
+        else:
+            rospy.logwarn("Invalid kinect!")
+            sys.exit(1)
 
 
+        rospy.logwarn("DETECT PEOPLE KINECT SELECTED IS {0}".format(self.kinect))
+        if self.kinect == "door":
+            self.kinect_caminfo = "/door_kinect/rgb/camera_info"
+            self.kinect_cameraframe = "door_kinect_rgb_optical_frame"
+            self.kinect_subrgb = "/door_kinect/rgb/image_color"
+            self.kinect_subd = "/door_kinect/depth_registered/sw_registered/image_rect"
+            self.kinect_pubrgb = "/humandetect_door_imagergb"
+            self.kinect_pubdepth = "/humandetect_door_depth"
+            self.kinect_pubpose = "/humandetect_door_poses"
+        
+        
+        if self.kinect == "window":
+            self.kinect_caminfo = "/window_kinect/qhd/camera_info"
+            self.kinect_cameraframe = "window_kinect_rgb_optical_frame"
+            self.kinect_subrgb = "/window_kinect/qhd/image_color"
+            self.kinect_subd = "/window_kinect/qhd/image_depth_rect"
+            self.kinect_pubrgb = "/humandetect_window_imagergb"
+            self.kinect_pubdepth = "/humandetect_window_depth"
+            self.kinect_pubpose = "/humandetect_window_poses"
+        
+        
+        
         # Setup raytracing and transform
-        cam_info = rospy.wait_for_message("/door_kinect/rgb/camera_info", CameraInfo, timeout=None)
+        cam_info = rospy.wait_for_message(self.kinect_caminfo, CameraInfo, timeout=None)
         self.img_proc = PinholeCameraModel()
         self.img_proc.fromCameraInfo(cam_info)
 
         self.tf_broadcaster = tf.TransformBroadcaster()
-        self.camera_frame = 'door_kinect_rgb_optical_frame'
+        self.camera_frame = self.kinect_cameraframe
 
         # Subscribe to RGB and D data topics
-        self.sub_rgb = message_filters.Subscriber("/door_kinect/rgb/image_color", Image)
-        self.sub_d = message_filters.Subscriber("/door_kinect/depth_registered/sw_registered/image_rect", Image)
+        self.sub_rgb = message_filters.Subscriber(self.kinect_subrgb, Image)
+        self.sub_d = message_filters.Subscriber(self.kinect_subd, Image)
 
         
         # Setup publishing topics
-        self.pub_rgb = rospy.Publisher("/humandetect_imagergb", Image, queue_size=1)
-        self.pub_depth = rospy.Publisher("/humandetect_imagedepth", Image, queue_size=1)
-        self.pub_pose = rospy.Publisher("/humandetect_poses", PoseArray, queue_size=1)
+        self.pub_rgb = rospy.Publisher(self.kinect_pubrgb, Image, queue_size=1)
+        self.pub_depth = rospy.Publisher(self.kinect_pubdepth, Image, queue_size=1)
+        self.pub_pose = rospy.Publisher(self.kinect_pubpose, PoseArray, queue_size=1)
 
         # Synchronisation
         self.ts = message_filters.ApproximateTimeSynchronizer([self.sub_rgb, self.sub_d], 10, 0.1, allow_headerless=False)
@@ -73,7 +104,7 @@ class ROSTensorFlow(object):
         sys.path.append(path_add)
         objectdetect_path = os.path.join(rospkg.RosPack().get_path("yeetbot_humantracker"), "models/research/object_detection")
         sys.path.append(objectdetect_path)
-        print(sys.path)
+        rospy.logwarn(sys.path)
         
         # Import object detection API utils
         from utils import label_map_util
@@ -96,7 +127,7 @@ class ROSTensorFlow(object):
         self.label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
         self.categories = label_map_util.convert_label_map_to_categories(self.label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
         self.category_index = label_map_util.create_category_index(self.categories)
-        print(self.category_index)
+        rospy.logwarn(self.category_index)
 
         # Tensorflow session setup
         self.sess = None
@@ -130,11 +161,11 @@ class ROSTensorFlow(object):
 
         # Callback register
         self.ts.registerCallback(self.callback)
-        print('Init done')
+        rospy.logwarn('Init done')
 
     def callback(self, color_msg, depth_msg):
         t1 = cv2.getTickCount()
-        print(t1)
+        rospy.logwarn(t1)
 
         # Receive camera data
         frame_color = self.cv_bridge1.imgmsg_to_cv2(color_msg, desired_encoding="passthrough").copy()
@@ -147,10 +178,10 @@ class ROSTensorFlow(object):
         # Get image geometry
         rgb_height, rgb_width, rgb_channels = frame_rgb.shape
         depth_height, depth_width = frame_depth.shape
-        print("RGB INFO")
-        print("{0} {1} {2}".format(rgb_height, rgb_width, rgb_channels))
-        print("DEPTH INFO")
-        print("{0} {1}".format(depth_height, depth_width))
+        rospy.logwarn("RGB INFO")
+        rospy.logwarn("{0} {1} {2}".format(rgb_height, rgb_width, rgb_channels))
+        rospy.logwarn("DEPTH INFO")
+        rospy.logwarn("{0} {1}".format(depth_height, depth_width))
 
         # Find people on RGB image with Tensorflow
 
@@ -219,7 +250,7 @@ class ROSTensorFlow(object):
                     depth_frames.append(depth_frame)
                     depths.append(depth_median)
 
-                    center_d = (center_x, center_y, depth_median)
+                    center_d = (center_x, center_y, depth_median/1000)
                     center_pointsd.append(center_d)
                     #print("OBJECT {0} HAS DEPTH {1}".format(i, depth_median))
 
@@ -243,7 +274,7 @@ class ROSTensorFlow(object):
             time1 = (t2-t1)/self.freq
             frame_rate_calc = 1/time1
 
-            print("FPS: {0:.2f}".format(frame_rate_calc))
+            rospy.logwarn("FPS: {0:.2f}".format(frame_rate_calc))
 
             objects = self.ct.update(center_pointsd.copy())
 
@@ -263,7 +294,7 @@ class ROSTensorFlow(object):
             cv2.rectangle(frame_color, depth_box[0], depth_box[1], (0, 255, 0), 2)
         
         for point in center_points:
-            print(point)
+            rospy.logwarn(point)
             cv2.circle(frame_color, point, 5, (0, 0, 255), 2)
         #boxes_coords = list()
         #center_points = list()
@@ -277,7 +308,7 @@ class ROSTensorFlow(object):
         poses1 = list()
         for (objectID, centroid) in objects.items():
             centroidx, centroidy, centroidz = centroid
-            print("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
+            rospy.logwarn("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
             x, y, _ = self.img_proc.projectPixelTo3dRay((centroidx, centroidy))
             print(x)
             print(y)
