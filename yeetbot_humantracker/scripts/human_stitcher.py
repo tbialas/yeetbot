@@ -59,7 +59,7 @@ class HumanStitcher:
         rospy.Subscriber(
             '/door_tracker', YEETBotHumanPoseArray, self.human_pose_cb)
         rospy.Subscriber(
-            '/windo_tracker', YEETBotHumanPoseArray, self.human_pose_cb)
+            '/window_tracker', YEETBotHumanPoseArray, self.human_pose_cb)
         self.pub = rospy.Publisher(
             '/stitched_human_poses', YEETBotHumanPoseArray, queue_size=2)
 
@@ -124,7 +124,7 @@ class HumanStitcher:
             for key in keys:
                 human_closest_poses[human][key] = []
                 human_closest_ids[human][key] = []
-                for pose, id_ in zip(self.poses[key].poses, self.ids[key]:
+                for pose, id_ in zip(self.poses[key].poses, self.ids[key]):
                     if len(human_closest_poses[human][key] < 3):
                         human_closest_poses[human][key].append(pose)
                         human_closest_ids[human][key].append(id_)
@@ -252,7 +252,7 @@ class HumanStitcher:
             best_id = None
             best_key = None
             for key in matching_pairs:
-                for id_ in matching_pairs[key]
+                for id_ in matching_pairs[key]:
                     best_pair = matching_pairs[key][id_]
                     break
                 break
@@ -287,7 +287,7 @@ class HumanStitcher:
                         break
             elif match_id2:
                 for point in sets_of_points:
-                    if len([t for t in point if t[1] == best_id) != 0:
+                    if len([t for t in point if t[1] == best_id]) != 0:
                         point.append(
                             (best_key, best_id, best_pair[0][0]))
                         used_ids[best_key].append(best_id)
@@ -316,7 +316,7 @@ class HumanStitcher:
 
         for point in set_of_points:
             h = Human(self.id_counter)
-            id_counter++
+            id_counter += 1
             h.stamp = stamp
             for i in range(len(point)):
                 h.ids[point[i][0]] = point[i][1]
