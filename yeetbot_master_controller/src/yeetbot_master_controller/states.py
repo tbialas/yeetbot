@@ -1,6 +1,8 @@
-from math import sqrt
+from math import sqrt, cos, sin, acos, atan2
 
 import rospy
+
+import tf
 
 from std_msgs.msg import String
 from geometry_msgs.msg import PoseStamped
@@ -10,8 +12,17 @@ from yeetbot_master_controller.interfaces import publish_state_update, text_msg_
 from yeetbot_master_controller.user_interface import user_interface
 from yeetbot_master_controller.human_tracker_interface import tracker_interface
 from yeetbot_master_controller.item_database import item_database
+from yeetbot_master_controller.exceptions import HumanDeadError
 from yeetbot_master_controller import navigation_interface
 from navigation_interface import nav_interface
+
+
+HOME_X = 3.45
+HOME_Y = 4.15
+HOME_YAW = -3.14 / 2
+
+
+tf_listener = tf.TransformListener()
 
 
 class State:
@@ -32,12 +43,16 @@ class Idle(State):
 
         user_interface.idle_screen_choices()
 
+        self.start_time = rospy.Time.now()
+
     def run(self):
         return "Idle"
 
     def next(self, input_array):
-        if input_array['yeet_request'] == 1:
-            return Travelling()
+        if input_array['low_voltage'] == 1:
+            return LowVoltage()
+        elif input_array['yeet_request'] == 1:
+            return TravelToRequest()
         elif input_array['tool_timeout'] == 1:
             return ForceReturn()
         elif input_array['request'] == 'lend':
@@ -45,14 +60,18 @@ class Idle(State):
         elif input_array['request'] == 'return':
             return VerifyRequest('return')
         else:
+            dur = rospy.Time.now() - self.start_time
+            if dur.secs > 15:
+                return ReturnHome()
             return self
 
 
 class Travelling(State):
-    def __init__(self):
+    def __init__(self goal=PoseStamped()):
         publish_state_update(YEETBotState.TRAVELLING)
 
-        self.current_goal = PoseStamped()
+        self.current_goal = goal
+        self.new_goal = goal
         nav_interface.goto_pos(self.current_goal)
 
         self.state = navigation_interface.ACTIVE
@@ -63,10 +82,8 @@ class Travelling(State):
         return sqrt(dx*dx + dy*dy)
 
     def run(self):
-        target_pose = PoseStamped()
-
-        if self.goal_distance(target_pose) >= 2:
-            self.current_goal = target_pose
+        if self.goal_distance(self.new_goal) >= 2:
+            self.current_goal = self.new_goal
             nav_interface.goto_pos(self.current_goal)
 
         self.state = nav_interface.get_state()
@@ -237,3 +254,173 @@ class ForceReturn(Travelling):
             return ReturnTool()
         else:
             return self
+
+
+class ReturnHome(Travelling):
+    def __init__(self):
+        home = PoseStamped()
+        home.header.stamp = rospy.Time.now()
+        home.header.frame_id = 'map'
+        home.pose.position.x = HOME_X
+        home.pose.position.y = HOME_Y
+        home.pose.orientation.w = cos(HOME_YAW / 2)
+        home.pose.orientation.z = sin(HOME_YAW / 2)
+        print home
+        super(Travelling, self).__init__(goal=home)
+    
+    def run(self):
+        super(Travelling, self).run()
+        return "ReturnHome"
+
+    def next(self, input_array):
+        if input_array['low_voltage'] == 1:
+            return LowVoltage()
+        elif state == navigation_interface.SUCCEEDED:
+            return Idle()
+        elif state == navigation_interface.NOTHING:
+            return ReturnHome()
+        elif input_array['yeet_request'] == 1:
+            return Travelling()
+        elif input_array['tool_timeout'] == 1:
+            return ForceReturn()
+        else:
+            return self
+
+
+class LowVoltage(ReturnHome):
+    def __init__(self):
+        super(ReturnHome, self).__init__()
+        speech_msg = String()
+        speech_msg.data = "I am low on battery! Please help me charge myself!"
+        text_msg_pub.publish(speech_msg)
+
+    def run(self):
+        super(ReturnHome, self).run()
+        return "LowVoltage"
+
+    def next(self, input_array):
+        if state == navigation_interface.SUCCEEDED:
+            return Idle()
+        elif state == navigation_interface.NOTHING:
+            return LowVoltage()
+        else:
+            return self
+
+class TravelToRequest(Travelling):
+    def __init__(self):
+        (target, self.id) = self.calculate_target_pose()
+        super(Travelling, self).__init__(pose=target)
+
+    def calculate_target_pose(self):
+        try:
+            (trans, rot) = tf_listener.lookupTransform(
+                'base_link', 'map', rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, 
+                tf.ExtrapolationException):
+            rospy.logerr("Failed to get pose of robot in map frame...")
+            pose = PoseStamped()
+            pose.pose.position.x = HOME_X
+            pose.pose.position.y = HOME_Y
+            pose.pose.orientation.w = cos(HOME_YAW / 2)
+            pose.pose.orientation.z = sin(HOME_YAW / 2)
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = 'map'
+            return (pose, -1)
+
+        a = tracker_interface.voice_yaw + 2*acos(rot[3])
+        dx = cos(a)
+        dy = sin(a)
+        sx = trans.x
+        sy = trans.y
+        # We now have a ray in the map coordinate frame pointing at the
+        # person who called us (in the form R = s + m*d)
+
+        min_dist = 9e9
+        target = None
+        # Assume all human poses are in the map frame ( ? )
+        for human in tracker_interface.humans:
+            hx = human.pose.position.x
+            hy = human.pose.position.y
+            
+            # Shortest distance between human pose and the ray is the length
+            # of the ray from the human which is at right angles to the
+            # ray from the robot
+            # s + m * d = h + n * e
+            # d dot e = 0
+
+            (ex, ey) = (0, 0)
+            if dx > 1e-9 or dx < -1e-9:
+                ey = 1
+                ex = dy/dx
+                mag = sqrt(1 + ex*ex)
+                ex /= mag
+                ey /= mag
+            else:
+                ey = 0
+                ex = 1
+
+            # Now both vectors are normalised, calculate the distance from
+            # h to the intersection point p
+            sx + m*dx = hx + n*ex
+            sy + m*dy = hy + n*ey
+            m = (hx + sy*ex/ey - hy*ex/ey - sx) / (dx*(1 - dy*ex/(ey*dx)))
+            dist = abs((sx + m*dx -hx) / ex)
+
+            if dist < min_dist:
+                min_dist = dist
+                target = human
+
+        if target != None:
+            pose = PoseStamped()
+            pose.pose.position = target.pose.position
+            pose.pose.orientation.w = cos(a / 2)
+            pose.pose.orientation.z = sin(a / 2)
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = 'map'
+            return (pose, human.id)
+        else:
+            pose = PoseStamped()
+            pose.pose.position.x = HOME_X
+            pose.pose.position.y = HOME_Y
+            pose.pose.orientation.w = cos(HOME_YAW / 2)
+            pose.pose.orientation.z = sin(HOME_YAW / 2)
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = 'map'
+            return (pose, -1)
+            
+    def run(self):
+        # Get pose of human with ID that we're driving towards and update
+        # self.new_goal
+        try:
+            human_pose = tracker_interface.get_human_with_id(self.id).pose
+        except HumanDeadError:
+            # If the human is dead they might have simply been reassigned
+            # an ID by the tracker, so we just continue on the current
+            # heading
+            super(Travelling, self).run()
+            return "TravelToRequest"
+        try:
+            (trans, rot) = tf_listener.lookupTransform(
+                'base_link', 'map', rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, 
+                tf.ExtrapolationException):
+            rospy.logerr("Failed to get pose of robot in map frame...")
+            super(Travelling, self).run()
+            return "TravelToRequest"
+
+        # We want to move towards the human _and face them_
+        dx = human_pose.position.x - trans[0]
+        dy = human_pose.position.y - trans[1]
+        theta = atan2(dy, dx)
+        pose = PoseStamped()
+        pose.position = human_pose.position
+        pose.orientation.w = cos(theta/2)
+        pose.orientation.z = sin(theta/2)
+        pose.header.frame_id = 'map'
+        pose.header.stamp = rospy.Time.now()
+        self.new_goal = pose
+        super(Travelling, self).run()
+        return "TravelToRequest"
+
+    def next(self, input_array):
+        super(Travelling, self).next(input_array)
