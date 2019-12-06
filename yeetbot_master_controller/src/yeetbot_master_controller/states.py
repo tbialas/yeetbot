@@ -1,4 +1,4 @@
-from math import sqrt, cos, sin, acos
+from math import sqrt, cos, sin, acos, atan2
 
 import rospy
 
@@ -12,6 +12,7 @@ from yeetbot_master_controller.interfaces import publish_state_update, text_msg_
 from yeetbot_master_controller.user_interface import user_interface
 from yeetbot_master_controller.human_tracker_interface import tracker_interface
 from yeetbot_master_controller.item_database import item_database
+from yeetbot_master_controller.exceptions import HumanDeadError
 from yeetbot_master_controller import navigation_interface
 from navigation_interface import nav_interface
 
@@ -311,8 +312,21 @@ class TravelToRequest(Travelling):
         super(Travelling, self).__init__(pose=target)
 
     def calculate_target_pose(self):
-        (trans, rot) = tf_listener.lookupTransform(
-            'base_link', 'map', rospy.Time(0))
+        try:
+            (trans, rot) = tf_listener.lookupTransform(
+                'base_link', 'map', rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, 
+                tf.ExtrapolationException):
+            rospy.logerr("Failed to get pose of robot in map frame...")
+            pose = PoseStamped()
+            pose.pose.position.x = HOME_X
+            pose.pose.position.y = HOME_Y
+            pose.pose.orientation.w = cos(HOME_YAW / 2)
+            pose.pose.orientation.z = sin(HOME_YAW / 2)
+            pose.header.stamp = rospy.Time.now()
+            pose.header.frame_id = 'map'
+            return (pose, -1)
+
         a = tracker_interface.voice_yaw + 2*acos(rot[3])
         dx = cos(a)
         dy = sin(a)
@@ -323,7 +337,7 @@ class TravelToRequest(Travelling):
 
         min_dist = 9e9
         target = None
-        # Assume all human poses are in the map frame ( ;) )
+        # Assume all human poses are in the map frame ( ? )
         for human in tracker_interface.humans:
             hx = human.pose.position.x
             hy = human.pose.position.y
@@ -377,6 +391,34 @@ class TravelToRequest(Travelling):
     def run(self):
         # Get pose of human with ID that we're driving towards and update
         # self.new_goal
+        try:
+            human_pose = tracker_interface.get_human_with_id(self.id).pose
+        except HumanDeadError:
+            # If the human is dead they might have simply been reassigned
+            # an ID by the tracker, so we just continue on the current
+            # heading
+            super(Travelling, self).run()
+            return "TravelToRequest"
+        try:
+            (trans, rot) = tf_listener.lookupTransform(
+                'base_link', 'map', rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, 
+                tf.ExtrapolationException):
+            rospy.logerr("Failed to get pose of robot in map frame...")
+            super(Travelling, self).run()
+            return "TravelToRequest"
+
+        # We want to move towards the human _and face them_
+        dx = human_pose.position.x - trans[0]
+        dy = human_pose.position.y - trans[1]
+        theta = atan2(dy, dx)
+        pose = PoseStamped()
+        pose.position = human_pose.position
+        pose.orientation.w = cos(theta/2)
+        pose.orientation.z = sin(theta/2)
+        pose.header.frame_id = 'map'
+        pose.header.stamp = rospy.Time.now()
+        self.new_goal = pose
         super(Travelling, self).run()
         return "TravelToRequest"
 
