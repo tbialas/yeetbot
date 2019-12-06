@@ -114,8 +114,12 @@ class ROSTensorFlow(object):
         self.viz_utils1 = viz_utils
 
         # Tensorflow model setup
-        MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09'
-
+        MODEL_NAME = 'ssdlite_mobilenet_v2_coco_2018_05_09' # acceptable on CPU, low mAP
+        #MODEL_NAME = 'ssd_mobilenet_v1_fpn_shared_box_predictor_640x640_coco14_sync_2018_07_03' # is terribly slow on CPU
+        #MODEL_NAME = 'faster_rcnn_inception_v2_coco_2018_01_28' # very good but 1FPS
+        #MODEL_NAME = 'ssd_inception_v2_coco_2018_01_28'
+        
+        
         CWD_PATH = os.getcwd()
 
         PATH_TO_CKPT = os.path.join(objectdetect_path,MODEL_NAME,'frozen_inference_graph.pb')
@@ -168,17 +172,19 @@ class ROSTensorFlow(object):
         rospy.logwarn(t1)
 
         # Receive camera data
-        frame_color = self.cv_bridge1.imgmsg_to_cv2(color_msg, desired_encoding="passthrough").copy()
-        frame_depth = self.cv_bridge1.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough").copy()
+        frame_color = self.cv_bridge1.imgmsg_to_cv2(color_msg, desired_encoding="passthrough")
+        frame_depth = self.cv_bridge1.imgmsg_to_cv2(depth_msg, desired_encoding="passthrough")
      
         # Convert to format
         frame_rgb = cv2.cvtColor(frame_color, cv2.COLOR_BGR2RGB)
         frame_expanded = np.expand_dims(frame_rgb, axis=0)
 
         # Get image geometry
-        rgb_height, rgb_width, rgb_channels = frame_rgb.shape
+
+        #frame_rgb = cv2.resize(frame_rgb, None, fx=0.5, fy=0.5)
         depth_height, depth_width = frame_depth.shape
         rospy.logwarn("RGB INFO")
+        rgb_height, rgb_width, rgb_channels = frame_rgb.shape
         rospy.logwarn("{0} {1} {2}".format(rgb_height, rgb_width, rgb_channels))
         rospy.logwarn("DEPTH INFO")
         rospy.logwarn("{0} {1}".format(depth_height, depth_width))
@@ -205,7 +211,7 @@ class ROSTensorFlow(object):
             depth_frames = list()
             depths = list()
             for i in range(int(num[0])):
-                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.70): # if human detected
+                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.45): # if human detected with given confidence
 
                     box = [None]*2
                     box_depth = [None]*2
@@ -282,20 +288,20 @@ class ROSTensorFlow(object):
             text = "ID {}".format(objectID)
             centroidx, centroidy, centroidz = centroid
             centroidxy = (centroidx, centroidy)
-            cv2.putText(frame_color, text, (centroidx - 10, centroidy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(frame_color, (centroidx, centroidy), 4, (0, 255, 0), -1)
+            cv2.putText(frame_rgb, text, (centroidx - 10, centroidy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.circle(frame_rgb, (centroidx, centroidy), 4, (0, 255, 0), -1)
 
         #print(boxes_coords)
         #print(depth_coords)
         for box in boxes_coords:
-            cv2.rectangle(frame_color, box[0], box[1], (255, 0, 0), 2)
+            cv2.rectangle(frame_rgb, box[0], box[1], (255, 0, 0), 2)
         
         for depth_box in depth_coords:
-            cv2.rectangle(frame_color, depth_box[0], depth_box[1], (0, 255, 0), 2)
+            cv2.rectangle(frame_rgb, depth_box[0], depth_box[1], (0, 255, 0), 2)
         
         for point in center_points:
             rospy.logwarn(point)
-            cv2.circle(frame_color, point, 5, (0, 0, 255), 2)
+            cv2.circle(frame_rgb, point, 5, (0, 0, 255), 2)
         #boxes_coords = list()
         #center_points = list()
         #depth_coords = list()
@@ -334,7 +340,7 @@ class ROSTensorFlow(object):
 
 
 
-        out_message = self.cv_bridge1.cv2_to_imgmsg(frame_color)
+        out_message = self.cv_bridge1.cv2_to_imgmsg(frame_rgb)
         #print("TYPE2")
         #print(type(depth_frame[0]))
         #print("TYPE3")
