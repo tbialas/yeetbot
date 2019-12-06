@@ -34,6 +34,11 @@ import tensorflow
 import tf
 
 
+path_add = os.path.join(rospkg.RosPack().get_path("yeetbot_humantracker"), "scripts/")
+sys.path.append(path_add)
+
+from human import Human
+
 class ROSTensorFlow(object):
     def __init__(self):
         # Setup tensorflow (v1.14 / v2.0 compatible)
@@ -98,6 +103,7 @@ class ROSTensorFlow(object):
 
         # Setup Tensorflow object detection
         # Tensorflow path setup
+
         path_add = os.path.join(rospkg.RosPack().get_path("yeetbot_humantracker"), "models/research")
         sys.path.append(path_add)
         os.path.join(path_add, "slim")
@@ -106,6 +112,9 @@ class ROSTensorFlow(object):
         sys.path.append(objectdetect_path)
         rospy.logwarn(sys.path)
         
+
+        #from human import Human 
+
         # Import object detection API utils
         from utils import label_map_util
         from utils import visualization_utils as viz_utils
@@ -165,6 +174,10 @@ class ROSTensorFlow(object):
 
         # Callback register
         self.ts.registerCallback(self.callback)
+
+
+        self.humans = list()
+        self.humanid = 0
         rospy.logwarn('Init done')
 
     def callback(self, color_msg, depth_msg):
@@ -202,8 +215,10 @@ class ROSTensorFlow(object):
             #print(int(num[0]))
             #print("BOXES")
 
-
+            ####################################################################
+            # DETECT PEOPLE
             # Find people on image from Tensorflow results
+            ####################################################################
             boxes_coords = list()
             center_points = list()
             center_pointsd = list()
@@ -211,7 +226,7 @@ class ROSTensorFlow(object):
             depth_frames = list()
             depths = list()
             for i in range(int(num[0])):
-                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.45): # if human detected with given confidence
+                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.60): # if human detected with given confidence
 
                     box = [None]*2
                     box_depth = [None]*2
@@ -225,39 +240,38 @@ class ROSTensorFlow(object):
                     box[0] = (min_x, min_y)
                     box[1] = (max_x, max_y)
 
-                    center_x = int((min_x + max_x)/2)
-                    center_y = int((min_y + max_y)/2)
-                    center = (center_x, center_y)
-
-
-
-                    box_w = max_x - min_x
-                    box_h = max_y - min_y
-
-                    depth_min_y = int(center_y - box_h/4)
-                    depth_max_y = int(center_y + box_h/4)
-                    depth_min_x = int(center_x - box_w/4)
-                    depth_max_x = int(center_x + box_w/4)
-
-                    box_depth[0] = (depth_min_x, depth_min_y)
-                    box_depth[1] = (depth_max_x, depth_max_y)
-
                     boxes_coords.append(box)
-                    depth_coords.append(box_depth)
-                    center_points.append(center)
+                    #center_x = int((min_x + max_x)/2)
+                    #center_y = int((min_y + max_y)/2)
+                    #center = (center_x, center_y)
 
-                    depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
+                    #box_w = max_x - min_x
+                    #box_h = max_y - min_y
+
+                    #depth_min_y = int(center_y - box_h/4)
+                    #depth_max_y = int(center_y + box_h/4)
+                    #depth_min_x = int(center_x - box_w/4)
+                    #depth_max_x = int(center_x + box_w/4)
+
+                    #box_depth[0] = (depth_min_x, depth_min_y)
+                    #box_depth[1] = (depth_max_x, depth_max_y)
+
+
+                    #depth_coords.append(box_depth)
+                    #center_points.append(center)
+
+                    #depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
                     #np.nan_to_num(depth_frame, False, 10)
-                    depth_frame = depth_frame
-                    depth_median = np.nanmedian(depth_frame)
+                    #depth_frame = depth_frame
+                    #depth_median = np.nanmedian(depth_frame)
                     #print("TYPE")
                     #print(type(depth_frame))
                     #print(depth_frame)
-                    depth_frames.append(depth_frame)
-                    depths.append(depth_median)
+                    #depth_frames.append(depth_frame)
+                    #depths.append(depth_median)
 
-                    center_d = (center_x, center_y, depth_median/1000)
-                    center_pointsd.append(center_d)
+                    #center_d = (center_x, center_y, depth_median/1000)
+                    #center_pointsd.append(center_d)
                     #print("OBJECT {0} HAS DEPTH {1}".format(i, depth_median))
 
             #print(depth_frame[0])
@@ -282,61 +296,83 @@ class ROSTensorFlow(object):
 
             rospy.logwarn("FPS: {0:.2f}".format(frame_rate_calc))
 
-            objects = self.ct.update(center_pointsd.copy())
+            #objects = self.ct.update(center_pointsd.copy())
 
-        for (objectID, centroid) in objects.items():
-            text = "ID {}".format(objectID)
-            centroidx, centroidy, centroidz = centroid
-            centroidxy = (centroidx, centroidy)
-            cv2.putText(frame_rgb, text, (centroidx - 10, centroidy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            cv2.circle(frame_rgb, (centroidx, centroidy), 4, (0, 255, 0), -1)
+
+        for human in self.humans:
+            matchedboxes = human.update_tracking(frame_rgb, boxes_coords)
+            for match in matchedboxes:
+                print("CLEANUP!")
+                print(match)
+                print(boxes_coords)
+                boxes_coords.remove(match)
+            if ((cv2.getTickCount()- human.last_seen)/self.freq > 5):
+                self.humans.remove(human)
+                print("DELETE HUMAN")
+
+        for box in boxes_coords:
+            self.humanid = self.humanid + 1;
+            self.humans.append(Human(self.humanid, box, frame_rgb))
+
+
+        for human in self.humans:
+            cv2.rectangle(frame_rgb, human.box[0], human.box[1], (0, 255, 0), 2)
+            cv2.putText(frame_rgb, "Human {0}".format(human.humanid), human.box[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            if human.trackerbox is not None:
+                cv2.rectangle(frame_rgb, human.trackerbox[0], human.trackerbox[1], (0, 0, 255), 2)
+        #for (objectID, centroid) in objects.items():
+        #    text = "ID {}".format(objectID)
+        #    centroidx, centroidy, centroidz = centroid
+        #    centroidxy = (centroidx, centroidy)
+        #    cv2.putText(frame_rgb, text, (centroidx - 10, centroidy - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        #    cv2.circle(frame_rgb, (centroidx, centroidy), 4, (0, 255, 0), -1)
 
         #print(boxes_coords)
         #print(depth_coords)
         for box in boxes_coords:
             cv2.rectangle(frame_rgb, box[0], box[1], (255, 0, 0), 2)
         
-        for depth_box in depth_coords:
-            cv2.rectangle(frame_rgb, depth_box[0], depth_box[1], (0, 255, 0), 2)
+        #for depth_box in depth_coords:
+        #    cv2.rectangle(frame_rgb, depth_box[0], depth_box[1], (0, 255, 0), 2)
         
-        for point in center_points:
-            rospy.logwarn(point)
-            cv2.circle(frame_rgb, point, 5, (0, 0, 255), 2)
+        #for point in center_points:
+        #    rospy.logwarn(point)
+        #    cv2.circle(frame_rgb, point, 5, (0, 0, 255), 2)
         #boxes_coords = list()
         #center_points = list()
         #depth_coords = list()
         #depth_frames = list()
         #depths = list()
         
-        out_pose = PoseArray()
-        out_pose.header.stamp = color_msg.header.stamp
-        out_pose.header.frame_id = self.camera_frame
-        poses1 = list()
-        for (objectID, centroid) in objects.items():
-            centroidx, centroidy, centroidz = centroid
-            rospy.logwarn("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
-            x, y, _ = self.img_proc.projectPixelTo3dRay((centroidx, centroidy))
-            print(x)
-            print(y)
+        #out_pose = PoseArray()
+        #out_pose.header.stamp = color_msg.header.stamp
+        #out_pose.header.frame_id = self.camera_frame
+        #poses1 = list()
+        #for (objectID, centroid) in objects.items():
+        #    centroidx, centroidy, centroidz = centroid
+        #    rospy.logwarn("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
+        #    x, y, _ = self.img_proc.projectPixelTo3dRay((centroidx, centroidy))
+        #    print(x)
+        #    print(y)
             
-            z = (centroidz)
-            print(z)
-            self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
+        #    z = (centroidz)
+        #    print(z)
+        #    self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
             
-            quat = tf.transformations.quaternion_from_euler(0,1.5,0)
+        #    quat = tf.transformations.quaternion_from_euler(0,1.5,0)
 
-            pose1 = Pose()
-            pose1.position.x = x
-            pose1.position.y = y
-            pose1.position.z = z
-            pose1.orientation.x = quat[0]
-            pose1.orientation.y = quat[1]
-            pose1.orientation.z = quat[2]
-            pose1.orientation.w = quat[3]
-            poses1.append(pose1)
+        #    pose1 = Pose()
+        #    pose1.position.x = x
+        #    pose1.position.y = y
+        #    pose1.position.z = z
+        #    pose1.orientation.x = quat[0]
+        #    pose1.orientation.y = quat[1]
+        #    pose1.orientation.z = quat[2]
+        #    pose1.orientation.w = quat[3]
+        #    poses1.append(pose1)
         
-        out_pose.poses = poses1
-        self.pub_pose.publish(out_pose)
+        #out_pose.poses = poses1
+        #self.pub_pose.publish(out_pose)
 
 
 
