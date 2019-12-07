@@ -4,5 +4,5 @@
           args="2.95 5.15 2.0 5.15 0.38 0 map door_kinect_link 50"/>
     <!-- Kinect V2 has Z forwards (standard camera frame convention) -->
     <node name="window_kinect_transform" type="static_transform_publisher" pkg="tf"
-          args="7.85 -2.2 1.95 0.42 0.04 -1.86 map window_kinect_link 50"/>
+          args="7.85 -2.2 1.95 0.53 -0.02 -1.78 map window_kinect_link 50"/>
 </launch>
