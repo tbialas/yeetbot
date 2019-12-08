@@ -91,6 +91,9 @@ def tag_detection_cb(tag_array):
         pose.header.stamp = tag_array.header.stamp
         pose.header.frame_id = 'map'
 
+        if pose.pose.pose.position.z > 0.1 or pose.pose.pose.position.z < -0.1:
+            return
+
         pub.publish(pose)
 
 

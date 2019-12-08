@@ -9,6 +9,8 @@ from yeetbot_master_controller.state_machine import StateMachine
 from yeetbot_master_controller.exceptions import NoToolsTimedOutError
 from yeetbot_master_controller.user_interface import user_interface
 from yeetbot_master_controller.interfaces import battery_voltage
+from yeetbot_master_controller.human_tracker_interface import tracker_interface
+from yeetbot_master_controller.navigation_interface import nav_interface
 
 
 BATTERY_LOW_VOLTAGE = 11.3
@@ -23,6 +25,8 @@ def main():
     machine = StateMachine()
 
     item_database.wait_until_ready()
+
+    nav_interface.wait_until_ready()
 
     print "Item Database ready"
 

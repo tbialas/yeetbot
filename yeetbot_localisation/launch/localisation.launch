@@ -44,10 +44,10 @@
         <param name="odom0_queue_size" value="20"/>
         <param name="pose0_queue_size" value="40"/>
         <param name="pose1_queue_size" value="40"/>
-<!--        <param name="pose0_rejection_threshold" value="0.6"/>-->
-<!--        <param name="pose1_rejection_threshold" value="0.6"/>-->
+        <param name="pose0_rejection_threshold" value="1.0"/>
+        <param name="pose1_rejection_threshold" value="1.0"/>
 
-        <param name="transform_time_offset" value="0.3"/>
+        <param name="transform_time_offset" value="0.5"/>
         <param name="publish_tf" value="true"/>
         <param name="smooth_lagged_data" value="true"/>
         <param name="history_length" value="5"/>

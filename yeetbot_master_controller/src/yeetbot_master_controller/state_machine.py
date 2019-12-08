@@ -15,7 +15,7 @@ class StateMachine:
     
     def run_next(self, input_array):
         self.current_state = self.current_state.next(input_array)
-        rospy.logdebug(self.current_state.run())
+        rospy.loginfo(self.current_state.run())
 
     def run_all(self, input_array):
         for i in input_array:

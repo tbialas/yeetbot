@@ -1,6 +1,7 @@
 <launch>
     <node name="gui" pkg="yeetbot_gui" type="yeet.py"/>
-    <node name="master" pkg="yeetbot_master_controller" type="master.py"/>
+    <node name="master" pkg="yeetbot_master_controller" type="master.py"
+          output="screen"/>
     <node name="door_apriltag_pose_estimator" pkg="yeetbot_localisation"
           type="tag_pose_estimation.py">
         <remap from="tag_detections" to="human6_tag_detector_detections"/>
