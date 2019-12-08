@@ -25,7 +25,7 @@ def init():
         port = '/dev/ttyACM0',
         baudrate=115200,
         timeout=0.5)
-    
+   
     done = 0
     while not done:
         cmd = computer.read_until(">yeet<")
@@ -94,7 +94,7 @@ def wait_for_input():
 
 def record_speech():
     print("listening...\n")
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "16000", "-d", "3"])
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
 
 def transcribe_file(speech_file):
     client = speech.SpeechClient()
@@ -105,7 +105,7 @@ def transcribe_file(speech_file):
     audio = types.RecognitionAudio(content=content)
     config = types.RecognitionConfig(
         encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
-        sample_rate_hertz=16000,
+        sample_rate_hertz=44100,
         language_code='en-GB')
 
     response = client.recognize(config, audio)
@@ -123,6 +123,7 @@ def transcribe_file(speech_file):
                     if word == tool:
                         serial_user_response += str(inventory.index(tool)) + ","
                         invalid_choice = False
+			print tool
             serial_user_response += "t" if invalid_choice else "f"
         serial_user_response += "<"
 
