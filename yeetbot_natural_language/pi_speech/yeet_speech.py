@@ -1,15 +1,21 @@
 #!/usr/bin/env python
 
 import subprocess
+import signal
 import io
 import sys
+import os
 import serial
 import multiprocessing
 import time
+import math
 from collections import deque
+from decimal import Decimal as D
 from google.cloud import speech
 from google.cloud.speech import enums
 from google.cloud.speech import types
+
+ANGLE_ELEMENT_NUM = 10
 
 def init():
     global computer
@@ -19,6 +25,11 @@ def init():
     global buffer_lock
     global read_buffer
     global port
+    global doa_matrix
+    global doa_odas
+    
+    subprocess.call(["killall", "odaslive"])
+    subprocess.call(["killall", "matrix-odas"])
 
     #serial port initialise and handshake
     computer = serial.Serial(
@@ -39,6 +50,12 @@ def init():
     inventory = []
     ros_buffer = deque()
     buffer_lock = multiprocessing.Lock()
+
+    #start doa
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
+    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
     #initialise thread for listening to computer and reading buffer
     port = multiprocessing.Process(target=listen_serial)
@@ -79,6 +96,16 @@ def update_states(msg):
     elif topic == ">s/":
         state = int(msg)
 
+def deg2rad_average(angle_list):
+    doa = int((set(angle_list), key=angle_list.count))
+    return str(round(math.radians(doa), 2))
+
+def send_doa():
+    with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/angles.txt") as f:
+        fl = f.readlines()[0:ANGLE_ELEMENT_NUM]
+        serial_angle = ">a/" + deg2rad_mode(fl) + "<"
+        computer.write(serial_angle)
+
 def listen_wake_word():
     print('mlem')
 
@@ -95,6 +122,21 @@ def wait_for_input():
 def record_speech():
     print("listening...\n")
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
+
+def doa_restart():
+    global doa_matrix
+    global doa_odas
+
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
+    #kill process
+    doa_odas.send_signal(signal.SIGINT)
+    time.sleep(0.2)
+    send_doa()
+    doa_matrix.send_signal(signal.SIGINT)
+    #restart process
+    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
 def transcribe_file(speech_file):
     client = speech.SpeechClient()
@@ -135,6 +177,7 @@ def main():
         wait_for_input()
         if state == 0:
             record_speech()
+            doa_restart()
             transcribe_file("recording.wav")
 
 if __name__ == '__main__':
