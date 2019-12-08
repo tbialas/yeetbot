@@ -12,6 +12,7 @@
         <!-- Pass in the image and camera info from the kinect -->
         <remap from="image_rect" to="$(arg image_topic)"/>
         <remap from="camera_info" to="$(arg camera_info_topic)"/>
+        <remap from="tag_detections" to="$(arg name)_detections"/>
         <param name="camera_frame" value="$(arg camera_frame)"/>
     </node>
 </launch>

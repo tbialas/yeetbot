@@ -5,6 +5,7 @@ from yeetbot_master_controller.states import *
 class StateMachine:
     def __init__(self):
         self.current_state = Idle()
+        self.current_state = ReturnHome()
         self.current_state.run()
 
     def __del__(self):

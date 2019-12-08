@@ -15,7 +15,7 @@ class NavigationInterface:
         self.client = actionlib.SimpleActionClient(
             'move_base', MoveBaseAction)
         print "Waiting for move_base..."
-        if not self.client.wait_for_server(rospy.Duration(20)):
+        if not self.client.wait_for_server(rospy.Duration(60)):
             rospy.logerr("Timed out waiting for Move Base to start")
 
     def goto_pos(self, pose):

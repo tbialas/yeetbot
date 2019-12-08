@@ -25,7 +25,7 @@ HOME_YAW = -3.14 / 2
 tf_listener = tf.TransformListener()
 
 
-class State:
+class State(object):
     def run(self):
         raise NotImplementedError
 
@@ -67,7 +67,7 @@ class Idle(State):
 
 
 class Travelling(State):
-    def __init__(self goal=PoseStamped()):
+    def __init__(self, goal=PoseStamped()):
         publish_state_update(YEETBotState.TRAVELLING)
 
         self.current_goal = goal
@@ -91,9 +91,9 @@ class Travelling(State):
         return "Travelling"
 
     def next(self, input_array):
-        if state == navigation_interface.SUCCEEDED:
+        if self.state == navigation_interface.ARRIVED:
             return VerifyRequest('')
-        elif state == navigation_interface.NOTHING:
+        elif self.state == navigation_interface.NOTHING:
             # TODO: Ask for help!
             return Idle()
         else:
@@ -240,7 +240,7 @@ class ReturnTool(State):
 
 class ForceReturn(Travelling):
     def __init__(self):
-        super(Travelling, self).__init__()
+        super(ForceReturn, self).__init__()
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
 
     def run(self):
@@ -266,18 +266,18 @@ class ReturnHome(Travelling):
         home.pose.orientation.w = cos(HOME_YAW / 2)
         home.pose.orientation.z = sin(HOME_YAW / 2)
         print home
-        super(Travelling, self).__init__(goal=home)
+        super(ReturnHome, self).__init__(goal=home)
     
     def run(self):
-        super(Travelling, self).run()
+        super(ReturnHome, self).run()
         return "ReturnHome"
 
     def next(self, input_array):
         if input_array['low_voltage'] == 1:
             return LowVoltage()
-        elif state == navigation_interface.SUCCEEDED:
+        elif self.state == navigation_interface.ARRIVED:
             return Idle()
-        elif state == navigation_interface.NOTHING:
+        elif self.state == navigation_interface.NOTHING:
             return ReturnHome()
         elif input_array['yeet_request'] == 1:
             return Travelling()
@@ -289,19 +289,19 @@ class ReturnHome(Travelling):
 
 class LowVoltage(ReturnHome):
     def __init__(self):
-        super(ReturnHome, self).__init__()
+        super(LowVoltage, self).__init__()
         speech_msg = String()
         speech_msg.data = "I am low on battery! Please help me charge myself!"
         text_msg_pub.publish(speech_msg)
 
     def run(self):
-        super(ReturnHome, self).run()
+        super(LowVoltage, self).run()
         return "LowVoltage"
 
     def next(self, input_array):
-        if state == navigation_interface.SUCCEEDED:
+        if self.state == navigation_interface.ARRIVED:
             return Idle()
-        elif state == navigation_interface.NOTHING:
+        elif self.state == navigation_interface.NOTHING:
             return LowVoltage()
         else:
             return self
@@ -309,7 +309,7 @@ class LowVoltage(ReturnHome):
 class TravelToRequest(Travelling):
     def __init__(self):
         (target, self.id) = self.calculate_target_pose()
-        super(Travelling, self).__init__(pose=target)
+        super(TravelToRequest, self).__init__(pose=target)
 
     def calculate_target_pose(self):
         try:
@@ -361,8 +361,6 @@ class TravelToRequest(Travelling):
 
             # Now both vectors are normalised, calculate the distance from
             # h to the intersection point p
-            sx + m*dx = hx + n*ex
-            sy + m*dy = hy + n*ey
             m = (hx + sy*ex/ey - hy*ex/ey - sx) / (dx*(1 - dy*ex/(ey*dx)))
             dist = abs((sx + m*dx -hx) / ex)
 
@@ -397,7 +395,7 @@ class TravelToRequest(Travelling):
             # If the human is dead they might have simply been reassigned
             # an ID by the tracker, so we just continue on the current
             # heading
-            super(Travelling, self).run()
+            super(TravelToRequest, self).run()
             return "TravelToRequest"
         try:
             (trans, rot) = tf_listener.lookupTransform(
@@ -405,7 +403,7 @@ class TravelToRequest(Travelling):
         except (tf.LookupException, tf.ConnectivityException, 
                 tf.ExtrapolationException):
             rospy.logerr("Failed to get pose of robot in map frame...")
-            super(Travelling, self).run()
+            super(TravelToRequest, self).run()
             return "TravelToRequest"
 
         # We want to move towards the human _and face them_
@@ -419,8 +417,8 @@ class TravelToRequest(Travelling):
         pose.header.frame_id = 'map'
         pose.header.stamp = rospy.Time.now()
         self.new_goal = pose
-        super(Travelling, self).run()
+        super(TravelToRequest, self).run()
         return "TravelToRequest"
 
     def next(self, input_array):
-        super(Travelling, self).next(input_array)
+        super(TravelToRequest, self).next(input_array)

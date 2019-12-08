@@ -1,4 +1,5 @@
-footprint: [ [0.254, -0.230], [-0.254, -0.230], [-0.254, 0.230], [0.254, 0.230] ]
+#footprint: [ [0.254, -0.230], [-0.254, -0.230], [-0.254, 0.230], [0.254, 0.230] ]
+robot_radius: 0.1
 map_type: costmap
 
 obstacle_layer:
@@ -15,8 +16,8 @@ obstacle_layer:
 
 inflation_layer:
     enabled:              true
-    inflation_radius: 0.1
-    cost_scaling_factor: 1.0
+    inflation_radius: 1.75
+    cost_scaling_factor: 2.25
 
 static_layer:
     enabled:              true
