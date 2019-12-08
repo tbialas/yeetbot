@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   message_runtime
   std_msgs
+  geometry_msgs
 )
 
 # Generate messages in the 'msg' folder
@@ -15,10 +16,12 @@ add_message_files(
   YEETBotUserResponse.msg
   YEETBotItemStates.msg
   YEETBotDrawerStates.msg
+  YEETBotHumanPoseArray.msg
 )
 
 # Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )

@@ -26,4 +26,6 @@ Required Software:
  - [tensorflow](https://www.tensorflow.org/)
  - [opencv](https://opencv.org/)
 
+(ROS dependencies can be installed via `rosdep install --from-path src --ignore-src -r -y` when run from the root of your catkin workspace)
+
 ##### yeet
