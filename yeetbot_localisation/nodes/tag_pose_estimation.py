@@ -81,9 +81,9 @@ def tag_detection_cb(tag_array):
         pose.pose.pose.orientation.z = rot[2]
         pose.pose.pose.orientation.w = rot[3]
 
-        pose.pose.covariance = [1e-2,    0,    0,    0,    0,    0,
-                                0   , 1e-2,    0,    0,    0,    0,
-                                0   ,    0, 1e-2,    0,    0,    0,
+        pose.pose.covariance = [3e-1,    0,    0,    0,    0,    0,
+                                0   , 3e-1,    0,    0,    0,    0,
+                                0   ,    0, 3e-1,    0,    0,    0,
                                 0   ,    0,    0,    0,    0,    0,
                                 0   ,    0,    0,    0,    0,    0,
                                 0   ,    0,    0,    0,    0, 1e-1]
