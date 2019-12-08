@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "burnished-ray-259720",
+  "private_key_id": "187e2b2b06f62343097c1c67506ae326e7dfba5f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQC33Xo4yhe4YvTI\neUocJ/L7u3q5XkQs21wr64F+MBwzJgyEC/pJE9yDDPGO+yVnWh082euFVj27jKso\nI359x7PDXjSs9b+BkVSz4TKi/YhbUrL34N/2gJODRCdHqH6+GaQWWlZDKKdg4R3w\n7OIF2sJhsKXqQ/3RgYhBofLWLe34bE7kmyt9zLeQfp1qtsT1bRT/syc0gFXAWzP3\nqfzL+N2UMkPdhrMNIOOCAd8gBKN7Di0K+IxwCSubBPONDYNVCcSArUFWQLdrOMPB\n1Rnxcf0ehObZ3x+kKCwCQ3V693jDmEZIFt4ulGyRbMU0CiSb6MLr29a7T5Vl7tn+\ndJ+CJ833AgMBAAECggEAExX/gPOhgLds9353rfKLq4vrkmBxrUJcEAcTWxj9ZGXX\nuMFRitJv+n6WeKQjXtYg4NcyNpYcNGLGxZThpYbcZzRZPXcJGRcP9tgynG66/9fW\n0hpaxUjVhzPE7BBWj78zpEpeV/xZW5oitIayc68grGlc37ONHnlWvpFkFs2PvVC7\ngBO2PSxvE6hm/IiP8t0VOcfyqpjBVDyfFJUUCMJLC81voUWDXC5SzIdeWr5CuzYt\nGagaSPHzI/UpXbNx+5X3TKWxmErF+ZlNDIgpDQq37XbkKcPV9UW+tbGBJ2Gd/K+t\n1csqRvFIofI1I2Tn3OswYFA3vUr1bHHjEIuwi++waQKBgQD1nk7j+v904u5788PC\nFSKx/h7Z1QBzie6iMyKyRjdwCoCgLql2cb3I9oyPRGK85SDV3Av2hnjLuqRD1hHm\nl46eaK8fden7ePtPsPl4xYMv8xuRMFAUm9T2EF4QI6IOViT/xT0cFdoO0IYW2ry1\n9kIn2BCDko0ibH+LiB3z3mYQfQKBgQC/ovlK06Ty5eC1/pYfAff5AZxDV8T52EZJ\njBOqyY2n3Im8HcF6tXB2mCvJUylG+iP33yPUTUadmApjN5xhqL+j+25zO+E96Gh6\nboMjcM4jrNRU/3gZU/kzB+beg/jUuN/R1sQ7HLIaf85xoNYYqweuZoVxbrnXqISC\nyjnhM682gwKBgBt4o1Y4Yo4OO6I9d22js4e45nZyrmQ9zyTxFzZdSCIN6qj/zxBi\nVFm/yaTUfz6lWfDRdb0S+TvAGlNEBCiIVvk8uCmKpKrtsx4MqzpozO12AWVRxAMq\nEr2awwqHEb8Mv4Kj6tvTTdpOVFEGEglAC9ItBlvQ7lwlSnauuLrn6v55AoGAB42N\n08QpsSUcSTACjLBQLLFCjmjsK4i5pHZv5ABTo/UOPKrTkFmMWDBBMYskilabik5y\nJBDzoox2hFiRwkubWgQz4zjN9NmvHHw0kPYGOeO67qqu+hiULs217Lk42nF66NNV\nIptL7b1xzoqvRYOgJuCFi+X4TyamKl18EIMv+a8CgYEA42eSiI2luruUd0TgAo23\n4oUyW3ODI0vPw9ydKvoRrheMUADmyvj5pnjy73DCUSUD/QGKKT0/GHbXyaUrrxJx\nZ6d7yUacqe33jgsE6l4xdI04aVV37BSY6wVaZFetVDVax+d0T1byI+h4a8APDwZA\n+C1bfutUipUIDzdIXlAO4YE=\n-----END PRIVATE KEY-----\n",
+  "client_email": "yeetbot@burnished-ray-259720.iam.gserviceaccount.com",
+  "client_id": "117306411398143708329",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/yeetbot%40burnished-ray-259720.iam.gserviceaccount.com"
+}

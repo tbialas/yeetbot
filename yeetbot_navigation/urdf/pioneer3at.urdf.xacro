@@ -170,83 +170,83 @@ name="pioneer3at">
 		<child link="drawer_frame"/>
 	</joint>
 <!-- april tags-->
-174      <link name="yeet_box">
-175           <visual>
-176             <geometry>
-177               <box size="0.21 0.21 0.21" />
-178             </geometry>
-179             <material name="Blue" />
-180           </visual>
-181           <inertial>
-182               <mass value="0.0001" />
-183               <origin xyz="0 0 0" />
-184               <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-185                        iyy="0.0001" iyz="0.0" 
-186                        izz="0.0001" />
-187           </inertial>
-188         </link>
-189         <joint name="base_yeet_joint" type="fixed">
-190                 <origin xyz="0 0 1.28" rpy="0 0 0"/>
-191                 <parent link="base_link"/>
-192                 <child link="yeet_box"/>
-193         </joint>
-194 
-195      <link name="tag0">
-196           <inertial>
-197               <mass value="0.0001" />
-198               <origin xyz="0 0 0" />
-199               <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-200                        iyy="0.0001" iyz="0.0" 
-201                        izz="0.0001" />
-202           </inertial>
-203         </link>
-204         <joint name="yeet_tag0_joint" type="fixed">
-205                 <origin xyz="0 -0.105 0" rpy="${pi*0.5} 0 0"/>
-206                 <parent link="yeet_box"/>
-207                 <child link="tag0"/>
-208         </joint>
-209      <link name="tag1">
-210           <inertial>
-211               <mass value="0.0001" />
-212               <origin xyz="0 0 0" />
-213               <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-214                        iyy="0.0001" iyz="0.0" 
-215                        izz="0.0001" />
-216           </inertial>
-217         </link>
-218         <joint name="yeet_tag1_joint" type="fixed">
-219                 <origin xyz="-0.105 0 0" rpy="${pi*0.5} 0 ${pi*1.5}"/>
-220                 <parent link="yeet_box"/>
-221                 <child link="tag1"/>
-222         </joint>
-223      <link name="tag2">
-224           <inertial>
-225               <mass value="0.0001" />
-226               <origin xyz="0 0 0" />
-227               <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-228                        iyy="0.0001" iyz="0.0" 
-229                        izz="0.0001" />
-230           </inertial>
-231         </link>
-232         <joint name="yeet_tag2_joint" type="fixed">
-233                 <origin xyz="0 0.105 0" rpy="${pi * 1.5} ${pi} 0"/>
-234                 <parent link="yeet_box"/>
-235                 <child link="tag2"/>
-236         </joint>
-237      <link name="tag3">
-238           <inertial>
-239               <mass value="0.0001" />
-240               <origin xyz="0 0 0" />
-241               <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
-242                        iyy="0.0001" iyz="0.0" 
-243                        izz="0.0001" />
-244           </inertial>
-245         </link>
-246         <joint name="yeet_tag3_joint" type="fixed">
-247                 <origin xyz="0.105 0 0" rpy="${pi * 0.5} 0 ${pi * 0.5}"/>
-248                 <parent link="yeet_box"/>
-249                 <child link="tag3"/>
-250         </joint>
+     <link name="yeet_box">
+          <visual>
+            <geometry>
+              <box size="0.21 0.21 0.21" />
+            </geometry>
+            <material name="Blue" />
+          </visual>
+          <inertial>
+              <mass value="0.0001" />
+              <origin xyz="0 0 0" />
+              <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                       iyy="0.0001" iyz="0.0" 
+                       izz="0.0001" />
+          </inertial>
+        </link>
+        <joint name="base_yeet_joint" type="fixed">
+                <origin xyz="-0.075 0 1.28" rpy="0 0 0"/>
+                <parent link="base_link"/>
+                <child link="yeet_box"/>
+        </joint>
+
+     <link name="tag0">
+          <inertial>
+              <mass value="0.0001" />
+              <origin xyz="0 0 0" />
+              <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                       iyy="0.0001" iyz="0.0" 
+                       izz="0.0001" />
+          </inertial>
+        </link>
+        <joint name="yeet_tag0_joint" type="fixed">
+                <origin xyz="0 -0.105 0" rpy="${pi*0.5} 0 0"/>
+                <parent link="yeet_box"/>
+                <child link="tag0"/>
+        </joint>
+     <link name="tag1">
+          <inertial>
+              <mass value="0.0001" />
+              <origin xyz="0 0 0" />
+              <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                       iyy="0.0001" iyz="0.0" 
+                       izz="0.0001" />
+          </inertial>
+        </link>
+        <joint name="yeet_tag1_joint" type="fixed">
+                <origin xyz="-0.105 0 0" rpy="${pi*0.5} 0 ${pi*1.5}"/>
+                <parent link="yeet_box"/>
+                <child link="tag1"/>
+        </joint>
+     <link name="tag2">
+          <inertial>
+              <mass value="0.0001" />
+              <origin xyz="0 0 0" />
+              <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                       iyy="0.0001" iyz="0.0" 
+                       izz="0.0001" />
+          </inertial>
+        </link>
+        <joint name="yeet_tag2_joint" type="fixed">
+                <origin xyz="0 0.105 0" rpy="${pi * 1.5} ${pi} 0"/>
+                <parent link="yeet_box"/>
+                <child link="tag2"/>
+        </joint>
+     <link name="tag3">
+          <inertial>
+              <mass value="0.0001" />
+              <origin xyz="0 0 0" />
+              <inertia ixx="0.0001" ixy="0.0" ixz="0.0"
+                       iyy="0.0001" iyz="0.0" 
+                       izz="0.0001" />
+          </inertial>
+        </link>
+        <joint name="yeet_tag3_joint" type="fixed">
+                <origin xyz="0.105 0 0" rpy="${pi * 0.5} 0 ${pi * 0.5}"/>
+                <parent link="yeet_box"/>
+                <child link="tag3"/>
+        </joint>
 
 <!-- Kinect Depth Sensor  -->
      <link name="camera_link">

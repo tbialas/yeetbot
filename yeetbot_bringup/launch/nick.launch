@@ -2,9 +2,17 @@
     <node name="gui" pkg="yeetbot_gui" type="yeet.py"/>
     <node name="master" pkg="yeetbot_master_controller" type="master.py"/>
     <node name="door_apriltag_pose_estimator" pkg="yeetbot_localisation"
-          type="tag_pose_estimation.py"/>
+          type="tag_pose_estimation.py">
+        <remap from="tag_detections" to="human6_tag_detector_detections"/>
+        <remap from="yeetbot_pose_estimate" 
+               to="door_yeetbot_pose_estimate"/>
+    </node>
     <node name="window_apriltag_pose_estimator" pkg="yeetbot_localisation"
-          type="tag_pose_estimation.py"/>
+          type="tag_pose_estimation.py">
+        <remap from="tag_detections" to="human2_tag_detector_detections"/>
+        <remap from="yeetbot_pose_estimate" 
+               to="window_yeetbot_pose_estimate"/>
+    </node>
 
     <include file="$(find yeetbot_localisation)/launch/camera_locations.launch"/>
     <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>

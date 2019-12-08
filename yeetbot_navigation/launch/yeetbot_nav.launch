@@ -1,8 +1,8 @@
 <launch>
-	<!-- sensors -->
-    <include file="$(find freenect_launch)/launch/examples/freenect-xyz.launch" />
+    <!-- sensors -->
+    <include file="$(find freenect_launch)/launch/examples/freenect-xyz.launch"/> <!-- change value in launch file-->
     <include file="$(find yeetbot_navigation)/launch/fake_laser.launch"/>
-   <node pkg="rostopic" type="rostopic" name="kin_ang_pub" args="pub /set_tilt_degree std_msgs/Int16 '{data: -20}' -r 1"/>
+    <node pkg="rostopic" type="rostopic" name="kin_ang_pub" args="pub /set_tilt_degree std_msgs/Int16 '{data: -20}' -r 1"/>
     <node pkg="yeetbot_navigation" type="laser_nan_node.py" name="laser_nan"/>
    	<node pkg="urg_node" type="urg_node" name="urg_node">
         <param name="angle_min" value="-1.7453"/>
@@ -27,5 +27,5 @@
 	<param name="robot_description" command="$(find xacro)/xacro.py $(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>
+	<!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>-->
 </launch>

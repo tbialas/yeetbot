@@ -1,5 +1,5 @@
 <launch>
-	<arg name="xacro" />
+	<arg name="xacro" default="$(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro"/>
 	<arg name="joint_state_gui" default="true" />
 	<param name="robot_description" command="$(find xacro)/xacro.py $(arg xacro)" />
 	<param name="use_gui" value="$(arg joint_state_gui)"/>

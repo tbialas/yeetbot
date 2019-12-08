@@ -12,6 +12,8 @@
   <depend>tf</depend>
   <depend>costmap_2d</depend>
   <depend>robot_localization</depend>
+  <depend>pointcloud_to_laserscan</depend>
+  <depend>map_server</depend>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>sensor_msgs</build_depend>
   <build_depend>urdf</build_depend>
