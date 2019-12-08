@@ -27,5 +27,5 @@
 	<param name="robot_description" command="$(find xacro)/xacro.py $(find yeetbot_navigation)/urdf/pioneer3at.urdf.xacro" />
     <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher" />
 
-	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>
+	<!--<node name="rviz" pkg="rviz" type="rviz" args="-d $(find yeetbot_navigation)/urdf/yeet.rviz" required="true"/>-->
 </launch>
