@@ -8,6 +8,7 @@
     <!--<node pkg="tf" type="static_transform_publisher" name="tf_pub" args="0 0 0 0 0 0  /map /odom  100"/> -->
    	<node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
     		<remap from="/move_base/NavfnROS/plan" to="/nope"/>
+		<remap from="/odom" to="/pose"/>
             <rosparam file="$(find yeetbot_navigation)/costmaps/costmap_common_params.yaml" command="load" ns="global_costmap" /> 
 	    	<rosparam file="$(find yeetbot_navigation)/costmaps/costmap_common_params.yaml" command="load" ns="local_costmap" />
     		<rosparam file="$(find yeetbot_navigation)/costmaps/local_costmap_params.yaml" command="load" />
