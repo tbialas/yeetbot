@@ -1,5 +1,5 @@
 #footprint: [ [0.254, -0.230], [-0.254, -0.230], [-0.254, 0.230], [0.254, 0.230] ]
-robot_radius: 0.2
+robot_radius: 0.325
 map_type: costmap
 
 obstacle_layer:
