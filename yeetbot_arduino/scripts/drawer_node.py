@@ -100,8 +100,8 @@ def talker():
     
     rospy.init_node('drawers', anonymous=True)                  ###DRAWERS###
     
-    drawer_status_pub = rospy.Publisher('/drawer_state_changed', YEETBotDrawerStates, queue_size=2)     ###CHANGE CHATTER###
-    item_status_pub = rospy.Publisher('/item_state_changed', YEETBotItemStates, queue_size=2)
+    drawer_status_pub = rospy.Publisher('/drawer_state_changed', YEETBotDrawerStates, queue_size=2, latch=True)     ###CHANGE CHATTER###
+    item_status_pub = rospy.Publisher('/item_state_changed', YEETBotItemStates, queue_size=2, latch=True)
     
     rospy.Subscriber('/drawer_state_request', YEETBotDrawerStates, callback)
     

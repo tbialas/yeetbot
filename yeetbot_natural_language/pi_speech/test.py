@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 
 import subprocess
+import signal
 import io
 import sys
+import os
 import serial
 import multiprocessing
 import time
@@ -19,12 +21,23 @@ def init():
     global buffer_lock
     global read_buffer
     global port
+    global doa_matrix
+    global doa_odas
+    
+    subprocess.call(["killall", "odaslive"])
+    subprocess.call(["killall", "matrix-odas"])
 
     #initialise ros variables
     state = 0
     inventory = ["hammer", "pliers", "screwdriver"]
     ros_buffer = deque()
     buffer_lock = multiprocessing.Lock()
+
+    #start doa
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
+    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
 def listen_wake_word():
     print('mlem')
@@ -37,6 +50,20 @@ def wait_for_input():
 def record_speech():
     print("listening...\n")
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
+
+def doa_restart():
+    global doa_matrix
+    global doa_odas
+
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
+    #kill process
+    doa_odas.send_signal(signal.SIGINT)
+    time.sleep(0.2)
+    doa_matrix.send_signal(signal.SIGINT)
+    #restart process
+    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
 def transcribe_file(speech_file):
     client = speech.SpeechClient()
@@ -77,6 +104,7 @@ def main():
         wait_for_input()
         if state == 0:
             record_speech()
+	    doa_restart()
             transcribe_file("recording.wav")
 
 if __name__ == '__main__':
