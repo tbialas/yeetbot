@@ -12,6 +12,7 @@ import math
 from collections import deque
 from decimal import Decimal as D
 from google.cloud import speech
+from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
@@ -63,6 +64,8 @@ def init():
 
     read_buffer = multiprocessing.Process(target=read_ros_buffer)
     read_buffer.start()
+    
+    tts("yeetbot 3000, online")
 
 def listen_serial():
     while True:
@@ -95,6 +98,9 @@ def update_states(msg):
     #state update
     elif topic == ">s/":
         state = int(msg)
+    #make yeetbot speak
+    elif topic == ">m/":
+        tts(msg)
 
 def deg2rad_average(angle_list):
     doa = int((set(angle_list), key=angle_list.count))
@@ -121,7 +127,24 @@ def wait_for_input():
 
 def record_speech():
     print("listening...\n")
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:2,0"])
+
+def tts(text):
+    client = texttospeech.TextToSpeechClient()
+    synthesis_input = texttospeech.types.SynthesisInput(text=text)
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code="en-AU",
+        name="en-AU-Wavenet-B",
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.MALE)
+
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.LINEAR16)
+
+    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    with open('yeetbot_talks.wav', 'wb') as out:
+        out.write(response.audio_content)
+
+    subprocess.call(["aplay", "yeetbot_talks.wav"])
 
 def doa_restart():
     global doa_matrix
