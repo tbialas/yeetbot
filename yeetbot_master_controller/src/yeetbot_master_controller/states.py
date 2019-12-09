@@ -265,7 +265,6 @@ class ReturnHome(Travelling):
         home.pose.position.y = HOME_Y
         home.pose.orientation.w = cos(HOME_YAW / 2)
         home.pose.orientation.z = sin(HOME_YAW / 2)
-        print home
         super(ReturnHome, self).__init__(goal=home)
     
     def run(self):
