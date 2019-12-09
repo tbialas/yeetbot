@@ -30,9 +30,11 @@ def init():
     state = 0
     inventory = []
     rospy.init_node('yeet_speech')
-    pub = rospy.Publisher("/user_response", YEETBotUserResponse, queue_size=10)
+    pub_response = rospy.Publisher("/user_response", YEETBotUserResponse, queue_size=10)
+    pub_doa = rospy.Publisher("/localisation", YEETBotLocalisation, queue_size=10)
     rospy.Subscriber("/user_choices", YEETBotUserChoices, choiceCallback)
     rospy.Subscriber("/yeetbot_state", YEETBotState, stateCallback) 
+    rospy.Subscriber("/speech_string", YEETBotSpeech, speechCallback)
 
 def choiceCallback(user_choices):
     global inventory
@@ -46,6 +48,11 @@ def stateCallback(yeetbot_state):
     serial_state = ">s/" + str(state) + "<"
     pi.write(serial_state)
 
+def speechCallback(speech_string):
+    yeet_speak = speech_string.text
+    serial_speech = ">m/" + yeet_speak + "<"
+    pi.write(serial_speech)
+
 def main():
     global pi
     print "Setting up..."
@@ -54,14 +61,21 @@ def main():
     while not rospy.is_shutdown():
         cmd = pi.read_until("<")
         if cmd:
-            msg = YEETBotUserResponse()
             topic, serial_info = cmd[:3], cmd[3:-1]
             #user_choice
             if topic == ">u/":
+                msg = YEETBotUserResponse()
                 serial_info = list(serial_info.split(","))
                 msg.choice = int(serial_info[0])
                 msg.invalid_choice = True if serial_info[1] == "t" else False
-                pub.publish(msg)
+                pub_response.publish(msg)
+                rospy.loginfo(msg)
+                
+            #doa
+            elif topic == ">a/":
+                msg = YEETBotLocalisation()
+                msg.doa = float(serial_info)
+                pub_doa.publish(msg)
                 rospy.loginfo(msg)
 
     pi.write("quit")

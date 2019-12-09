@@ -12,6 +12,7 @@ import math
 from collections import deque
 from decimal import Decimal as D
 from google.cloud import speech
+from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
@@ -53,8 +54,8 @@ def init():
 
     #start doa
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
-    doa_matrix = subprocess.Popen(["./matrix-odas"])
-    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    doa_matrix = subprocess.Popen(["./matrix-odas", ">", "/dev/null/", "2>&1"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg", ">", "/dev/null/", "2>&1"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
     #initialise thread for listening to computer and reading buffer
@@ -63,6 +64,8 @@ def init():
 
     read_buffer = multiprocessing.Process(target=read_ros_buffer)
     read_buffer.start()
+    
+    tts("yeetbot 3000, online")
 
 def listen_serial():
     while True:
@@ -95,8 +98,11 @@ def update_states(msg):
     #state update
     elif topic == ">s/":
         state = int(msg)
+    #make yeetbot speak
+    elif topic == ">m/":
+        tts(msg)
 
-def deg2rad_average(angle_list):
+def deg2rad_mode(angle_list):
     doa = int((set(angle_list), key=angle_list.count))
     return str(round(math.radians(doa), 2))
 
@@ -107,8 +113,15 @@ def send_doa():
         computer.write(serial_angle)
 
 def listen_wake_word():
-    print('mlem')
-
+    global snowboy
+    
+    od.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
+    snowboy = subprocess.Popen(["python", "demo_record.py", "resources/models/snowboy.umdl"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+    
+def wake_word_detected():
+    doa_restart()
+    
 def wait_for_input():
     delay = raw_input("input anything for YEETBot to listen; to quit input 'quit'\n")
     if delay == "quit":
@@ -120,8 +133,30 @@ def wait_for_input():
         sys.exit()
 
 def record_speech():
+    global snowboy
+    
     print("listening...\n")
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
+    snowboy.send_signal(signal.SIGINT)
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:2,0"])
+    doa_restart()
+    listen_wake_word()
+
+def tts(text):
+    client = texttospeech.TextToSpeechClient()
+    synthesis_input = texttospeech.types.SynthesisInput(text=text)
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code="en-AU",
+        name="en-AU-Wavenet-B",
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.MALE)
+
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.LINEAR16)
+
+    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    with open('yeetbot_talks.wav', 'wb') as out:
+        out.write(response.audio_content)
+
+    subprocess.call(["aplay", "yeetbot_talks.wav"])
 
 def doa_restart():
     global doa_matrix
@@ -177,7 +212,6 @@ def main():
         wait_for_input()
         if state == 0:
             record_speech()
-            doa_restart()
             transcribe_file("recording.wav")
 
 if __name__ == '__main__':

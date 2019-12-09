@@ -10,6 +10,7 @@ import multiprocessing
 import time
 from collections import deque
 from google.cloud import speech
+from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
@@ -23,12 +24,13 @@ def init():
     global port
     global doa_matrix
     global doa_odas
+    global text
     
     subprocess.call(["killall", "odaslive"])
     subprocess.call(["killall", "matrix-odas"])
 
     #initialise ros variables
-    state = 0
+    state = 1
     inventory = ["hammer", "pliers", "screwdriver"]
     ros_buffer = deque()
     buffer_lock = multiprocessing.Lock()
@@ -38,6 +40,8 @@ def init():
     doa_matrix = subprocess.Popen(["./matrix-odas"])
     doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+    
+    text = "yeetbot 3000, online"
 
 def listen_wake_word():
     print('mlem')
@@ -49,7 +53,7 @@ def wait_for_input():
 
 def record_speech():
     print("listening...\n")
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:3,0"])
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:2,0"])
 
 def doa_restart():
     global doa_matrix
@@ -98,14 +102,34 @@ def transcribe_file(speech_file):
     else:
         print "no words recognized!\n"
 
+def tts(text):
+    client = texttospeech.TextToSpeechClient()
+    synthesis_input = texttospeech.types.SynthesisInput(text=text)
+    voice = texttospeech.types.VoiceSelectionParams(
+        language_code="en-AU",
+        name="en-AU-Wavenet-B",
+        ssml_gender=texttospeech.enums.SsmlVoiceGender.MALE)
+
+    audio_config = texttospeech.types.AudioConfig(
+        audio_encoding=texttospeech.enums.AudioEncoding.LINEAR16)
+
+    response = client.synthesize_speech(synthesis_input, voice, audio_config)
+    with open('yeetbot_talks.wav', 'wb') as out:
+        out.write(response.audio_content)
+
+    subprocess.call(["aplay", "yeetbot_talks.wav"])
+
 def main():
+    global text 
     init()
     while True:
         wait_for_input()
         if state == 0:
             record_speech()
-	    doa_restart()
+    	    doa_restart()
             transcribe_file("recording.wav")
+        elif state == 1:
+            tts(text)
 
 if __name__ == '__main__':
     main()
