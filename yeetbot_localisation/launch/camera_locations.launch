@@ -1,7 +1,7 @@
 <launch>
     <!-- Kinect V1 has x forwards (standard robot frame convention) -->
     <node name="door_kinect_transform" type="static_transform_publisher" pkg="tf"
-          args="2.7 5.9 2.0 5.10 0.38 0 map door_kinect_link 50"/>
+          args="3.0 5.5 2.0 5.10 0.38 0 map door_kinect_link 50"/>
     <!-- Kinect V2 has Z forwards (standard camera frame convention) -->
     <node name="window_kinect_transform" type="static_transform_publisher" pkg="tf"
           args="8.15 -2.2 1.95 0.53 -0.02 -1.78 map window_kinect_link 50"/>
