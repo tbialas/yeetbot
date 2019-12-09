@@ -250,7 +250,7 @@ class ForceReturn(Travelling):
         pose.header.stamp = rospy.Time.now()
         super(ForceReturn, self).__init__(goal=pose)
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
-        self.tool = item_database.get_timed_out_tool()
+        self.tool = item_database.get_timed_out_tool_named()
 
     def run(self):
         super(ForceReturn, self).run()
