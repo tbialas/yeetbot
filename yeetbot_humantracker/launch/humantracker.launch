@@ -13,7 +13,7 @@
             <arg name="base_name_tf" value="window_kinect"/>
             <arg name="publish_tf" value="true"/>
             <arg name="depth_method" value="opengl"/>
-            <arg name="fps_limit" value="7"/>
+            <arg name="fps_limit" value="5"/>
         </include>
     	<node name="$(arg kinect_name)_humantracker" pkg="yeetbot_humantracker" type="detectpeople.py" output="screen" args="window"/>
 

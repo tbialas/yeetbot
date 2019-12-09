@@ -28,6 +28,7 @@ from image_geometry import PinholeCameraModel
 from sensor_msgs.msg import Image, CameraInfo
 from geometry_msgs.msg import PoseStamped, Pose, PoseArray
 from centroidtracker import CentroidTracker
+from yeetbot_msgs.msg import YEETBotHumanPoseArray
 
 import numpy as np
 import tensorflow
@@ -38,6 +39,7 @@ path_add = os.path.join(rospkg.RosPack().get_path("yeetbot_humantracker"), "scri
 sys.path.append(path_add)
 
 from human import Human
+from sort import *
 
 class ROSTensorFlow(object):
     def __init__(self):
@@ -95,7 +97,7 @@ class ROSTensorFlow(object):
         # Setup publishing topics
         self.pub_rgb = rospy.Publisher(self.kinect_pubrgb, Image, queue_size=1)
         self.pub_depth = rospy.Publisher(self.kinect_pubdepth, Image, queue_size=1)
-        self.pub_pose = rospy.Publisher(self.kinect_pubpose, PoseArray, queue_size=1)
+        self.pub_pose = rospy.Publisher(self.kinect_pubpose, YEETBotHumanPoseArray, queue_size=1)
 
         # Synchronisation
         self.ts = message_filters.ApproximateTimeSynchronizer([self.sub_rgb, self.sub_d], 10, 0.1, allow_headerless=False)
@@ -167,17 +169,19 @@ class ROSTensorFlow(object):
         self.font = cv2.FONT_HERSHEY_SIMPLEX
 
 
+        self.SORT = Sort(max_age = 20, min_hits = 3)
+
         ## Setup KCF tracker
         #self.kcf_tracker = cv2.TrackerKCF_create()
 
-        self.ct = CentroidTracker()
+        #self.ct = CentroidTracker()
 
         # Callback register
         self.ts.registerCallback(self.callback)
 
 
-        self.humans = list()
-        self.humanid = 0
+        #self.humans = list()
+        #self.humanid = 0
         rospy.logwarn('Init done')
 
     def callback(self, color_msg, depth_msg):
@@ -225,8 +229,9 @@ class ROSTensorFlow(object):
             depth_coords = list()
             depth_frames = list()
             depths = list()
+            sort_input = list()
             for i in range(int(num[0])):
-                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.60): # if human detected with given confidence
+                if (int(classes[0][i]) == 1 and scores[0][i] >= 0.50): # if human detected with given confidence
 
                     box = [None]*2
                     box_depth = [None]*2
@@ -241,17 +246,10 @@ class ROSTensorFlow(object):
                     box[1] = (max_x, max_y)
 
                     boxes_coords.append(box)
-                    #center_x = int((min_x + max_x)/2)
-                    #center_y = int((min_y + max_y)/2)
-                    #center = (center_x, center_y)
+                    sort_input.append([min_x, min_y, max_x, max_y, scores[0][i]])
 
-                    #box_w = max_x - min_x
-                    #box_h = max_y - min_y
 
-                    #depth_min_y = int(center_y - box_h/4)
-                    #depth_max_y = int(center_y + box_h/4)
-                    #depth_min_x = int(center_x - box_w/4)
-                    #depth_max_x = int(center_x + box_w/4)
+
 
                     #box_depth[0] = (depth_min_x, depth_min_y)
                     #box_depth[1] = (depth_max_x, depth_max_y)
@@ -260,15 +258,7 @@ class ROSTensorFlow(object):
                     #depth_coords.append(box_depth)
                     #center_points.append(center)
 
-                    #depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
-                    #np.nan_to_num(depth_frame, False, 10)
-                    #depth_frame = depth_frame
-                    #depth_median = np.nanmedian(depth_frame)
-                    #print("TYPE")
-                    #print(type(depth_frame))
-                    #print(depth_frame)
-                    #depth_frames.append(depth_frame)
-                    #depths.append(depth_median)
+
 
                     #center_d = (center_x, center_y, depth_median/1000)
                     #center_pointsd.append(center_d)
@@ -277,6 +267,78 @@ class ROSTensorFlow(object):
             #print(depth_frame[0])
             #print("BOXES COORDS")
             #print(boxes_coords)
+            print(sort_input)
+            sort_input = np.array(sort_input)
+            track_ids = self.SORT.update(sort_input)
+            print(track_ids)
+
+
+            out_pose = YEETBotHumanPoseArray()
+            out_pose.header.stamp = color_msg.header.stamp
+            out_pose.header.frame_id = self.camera_frame
+            poses1 = list()
+            ids = list()
+            for match in track_ids:
+                print("{0}".format((match[0], match[1])))
+                
+                ids.append(match[4])
+
+                center_x = int((match[0] + match[2])/2)
+                center_y = int((match[1] + match[3])/2)
+                center = (center_x, center_y)
+                
+                box_w = match[2] - match[0]
+                box_h = match[3] - match[1]
+                depth_min_y = int(center_y - box_h/4)
+                depth_max_y = int(center_y + box_h/4)
+                depth_min_x = int(center_x - box_w/4)
+                depth_max_x = int(center_x + box_w/4)
+
+                depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
+                    #np.nan_to_num(depth_frame, False, 10)
+                    #depth_frame = depth_frame
+                if (self.kinect == "window"):
+                    depth_median = np.nanmedian(depth_frame)/1000
+                elif (self.kinect == "door"):
+                    depth_median = np.nanmedian(depth_frame)
+                
+                np.append(match, [depth_median])
+                    #print("TYPE")
+                    #print(type(depth_frame))
+                    #print(depth_frame)
+                    #depth_frames.append(depth_frame)
+                    #depths.append(depth_median)
+                print("OBJECT {0}".format(match))
+                print("DEPTH IS {0}".format(depth_median))
+                print(match)
+
+                x, y, _ = self.img_proc.projectPixelTo3dRay((center_x, center_y))
+        #    print(x)
+        #    print(y)
+            
+                z = (depth_median)
+        #    print(z)
+                #self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
+            
+                quat = tf.transformations.quaternion_from_euler(0,1.5,0)
+
+                pose1 = Pose()
+                pose1.position.x = x
+                pose1.position.y = y
+                pose1.position.z = z
+                pose1.orientation.x = quat[0]
+                pose1.orientation.y = quat[1]
+                pose1.orientation.z = quat[2]
+                pose1.orientation.w = quat[3]
+                poses1.append(pose1)
+                
+                cv2.rectangle(frame_rgb, (int(match[0]), int(match[1])),(int(match[2]),int(match[3])) ,(0, 255, 0), 2)
+                cv2.putText(frame_rgb, "Human {0}".format(match[4]), (int(match[0]), int(match[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+
+                
+
+            
+
 
             #self.viz_utils1.visualize_boxes_and_labels_on_image_array(
             #    frame_color,
@@ -296,30 +358,35 @@ class ROSTensorFlow(object):
 
             rospy.logwarn("FPS: {0:.2f}".format(frame_rate_calc))
 
+
+            out_pose.ids = ids
+            out_pose.human_poses.poses = poses1
+            self.pub_pose.publish(out_pose)
+
             #objects = self.ct.update(center_pointsd.copy())
 
 
-        for human in self.humans:
-            matchedboxes = human.update_tracking(frame_rgb, boxes_coords)
-            for match in matchedboxes:
-                print("CLEANUP!")
-                print(match)
-                print(boxes_coords)
-                boxes_coords.remove(match)
-            if ((cv2.getTickCount()- human.last_seen)/self.freq > 5):
-                self.humans.remove(human)
-                print("DELETE HUMAN")
+        #for human in self.humans:
+        #    matchedboxes = human.update_tracking(frame_rgb, boxes_coords)
+        #    for match in matchedboxes:
+        #        print("CLEANUP!")
+        #        print(match)
+        #        print(boxes_coords)
+        #        boxes_coords.remove(match)
+        #    if ((cv2.getTickCount()- human.last_seen)/self.freq > 5):
+        #        self.humans.remove(human)
+        #        print("DELETE HUMAN")
 
-        for box in boxes_coords:
-            self.humanid = self.humanid + 1;
-            self.humans.append(Human(self.humanid, box, frame_rgb))
+        #for box in boxes_coords:
+            #self.humanid = self.humanid + 1;
+            #self.humans.append(Human(self.humanid, box, frame_rgb))
 
 
-        for human in self.humans:
-            cv2.rectangle(frame_rgb, human.box[0], human.box[1], (0, 255, 0), 2)
-            cv2.putText(frame_rgb, "Human {0}".format(human.humanid), human.box[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-            if human.trackerbox is not None:
-                cv2.rectangle(frame_rgb, human.trackerbox[0], human.trackerbox[1], (0, 0, 255), 2)
+        #for human in self.humans:
+        #    cv2.rectangle(frame_rgb, human.box[0], human.box[1], (0, 255, 0), 2)
+        #    cv2.putText(frame_rgb, "Human {0}".format(human.humanid), human.box[0], cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+        #    if human.trackerbox is not None:
+        #        cv2.rectangle(frame_rgb, human.trackerbox[0], human.trackerbox[1], (0, 0, 255), 2)
         #for (objectID, centroid) in objects.items():
         #    text = "ID {}".format(objectID)
         #    centroidx, centroidy, centroidz = centroid
@@ -344,35 +411,9 @@ class ROSTensorFlow(object):
         #depth_frames = list()
         #depths = list()
         
-        #out_pose = PoseArray()
-        #out_pose.header.stamp = color_msg.header.stamp
-        #out_pose.header.frame_id = self.camera_frame
-        #poses1 = list()
-        #for (objectID, centroid) in objects.items():
-        #    centroidx, centroidy, centroidz = centroid
-        #    rospy.logwarn("OBJECT {0} AT {1} DEPTH {2}".format(objectID, (centroidx, centroidy), centroidz))
-        #    x, y, _ = self.img_proc.projectPixelTo3dRay((centroidx, centroidy))
-        #    print(x)
-        #    print(y)
-            
-        #    z = (centroidz)
-        #    print(z)
-        #    self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
-            
-        #    quat = tf.transformations.quaternion_from_euler(0,1.5,0)
 
-        #    pose1 = Pose()
-        #    pose1.position.x = x
-        #    pose1.position.y = y
-        #    pose1.position.z = z
-        #    pose1.orientation.x = quat[0]
-        #    pose1.orientation.y = quat[1]
-        #    pose1.orientation.z = quat[2]
-        #    pose1.orientation.w = quat[3]
-        #    poses1.append(pose1)
         
-        #out_pose.poses = poses1
-        #self.pub_pose.publish(out_pose)
+
 
 
 
