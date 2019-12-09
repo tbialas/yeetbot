@@ -54,8 +54,8 @@ def init():
 
     #start doa
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
-    doa_matrix = subprocess.Popen(["./matrix-odas"])
-    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
+    doa_matrix = subprocess.Popen(["./matrix-odas", ">", "/dev/null/", "2>&1"])
+    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg", ">", "/dev/null/", "2>&1"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
     #initialise thread for listening to computer and reading buffer
@@ -102,7 +102,7 @@ def update_states(msg):
     elif topic == ">m/":
         tts(msg)
 
-def deg2rad_average(angle_list):
+def deg2rad_mode(angle_list):
     doa = int((set(angle_list), key=angle_list.count))
     return str(round(math.radians(doa), 2))
 
@@ -113,8 +113,15 @@ def send_doa():
         computer.write(serial_angle)
 
 def listen_wake_word():
-    print('mlem')
-
+    global snowboy
+    
+    od.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
+    snowboy = subprocess.Popen(["python", "demo_record.py", "resources/models/snowboy.umdl"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+    
+def wake_word_detected():
+    doa_restart()
+    
 def wait_for_input():
     delay = raw_input("input anything for YEETBot to listen; to quit input 'quit'\n")
     if delay == "quit":
@@ -126,8 +133,13 @@ def wait_for_input():
         sys.exit()
 
 def record_speech():
+    global snowboy
+    
     print("listening...\n")
+    snowboy.send_signal(signal.SIGINT)
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:2,0"])
+    doa_restart()
+    listen_wake_word()
 
 def tts(text):
     client = texttospeech.TextToSpeechClient()
@@ -200,7 +212,6 @@ def main():
         wait_for_input()
         if state == 0:
             record_speech()
-            doa_restart()
             transcribe_file("recording.wav")
 
 if __name__ == '__main__':
