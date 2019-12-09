@@ -14,7 +14,7 @@ from yeetbot_master_controller.navigation_interface import nav_interface
 
 
 BATTERY_LOW_VOLTAGE = 11.3
-YEET_REQUEST_TIMEOUT = 1.5
+YEET_REQUEST_TIMEOUT = 3.5
 
 
 def main():
@@ -80,7 +80,8 @@ def main():
 
         # Check for yeet requests
         dur = rospy.Time.now() - tracker_interface.voice_update_time
-        if dur.secs + dur.nsecs * 1e9 < YEET_REQUEST_TIMEOUT:
+        rospy.loginfo(dur)
+        if dur.secs + dur.nsecs / 1e9 < YEET_REQUEST_TIMEOUT:
             input_array['yeet_request'] = 1
         else:
             input_array['yeet_request'] = 0
