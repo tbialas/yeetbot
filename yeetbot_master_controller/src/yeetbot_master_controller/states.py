@@ -53,17 +53,19 @@ class Idle(State):
             return LowVoltage()
         elif input_array['yeet_request'] == 1:
             return TravelToRequest()
-        elif input_array['tool_timeout'] == 1:
-            return ForceReturn()
         elif input_array['request'] == 'lend':
             return VerifyRequest('lend')
         elif input_array['request'] == 'return':
             return VerifyRequest('return')
-        else:
-            dur = rospy.Time.now() - self.start_time
-            if dur.secs > 15:
-                return ReturnHome()
-            return self
+        elif input_array['tool_timeout'] == 1:
+            try:
+                return ForceReturn()
+            except NoToolsTimedOutError:
+                pass
+        dur = rospy.Time.now() - self.start_time
+        if dur.secs > 15:
+            return ReturnHome()
+        return self
 
 
 class Travelling(State):
@@ -240,13 +242,23 @@ class ReturnTool(State):
 
 class ForceReturn(Travelling):
     def __init__(self):
-        super(ForceReturn, self).__init__()
+        pose = PoseStamped()
+        pose.pose.position.x = 5.89
+        pose.pose.position.y = 2.15
+        pose.pose.orientation.w = 1
+        pose.header.frame_id = 'map'
+        pose.header.stamp = rospy.Time.now()
+        super(ForceReturn, self).__init__(goal=pose)
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
+        self.tool = item_database.get_timed_out_tool_named()
 
     def run(self):
-        # You know a tool is out and needs to be returned
-        # Op1 - shout that you want it back
-        # Op2 - go to the person who has it (human tracking dependent)
+        super(ForceReturn, self).run()
+        if self.state == navigation_interface.ARRIVED:
+            speech_msg = String()
+            speech_msg.data = "I am looking for my " + self.tool + ". Please return it to me."
+            text_msg_pub.publish(speech_msg)
+
         return "ForceReturn"
 
     def next(self, input_array):
@@ -281,9 +293,11 @@ class ReturnHome(Travelling):
         elif input_array['yeet_request'] == 1:
             return Travelling()
         elif input_array['tool_timeout'] == 1:
-            return ForceReturn()
-        else:
-            return self
+            try:
+                return ForceReturn()
+            except NoToolsTimedOutError:
+                pass
+        return self
 
 
 class LowVoltage(ReturnHome):
@@ -308,7 +322,7 @@ class LowVoltage(ReturnHome):
 class TravelToRequest(Travelling):
     def __init__(self):
         (target, self.id) = self.calculate_target_pose()
-        super(TravelToRequest, self).__init__(pose=target)
+        super(TravelToRequest, self).__init__(goal=target)
 
     def calculate_target_pose(self):
         try:
@@ -329,8 +343,8 @@ class TravelToRequest(Travelling):
         a = tracker_interface.voice_yaw + 2*acos(rot[3])
         dx = cos(a)
         dy = sin(a)
-        sx = trans.x
-        sy = trans.y
+        sx = trans[0]
+        sy = trans[1]
         # We now have a ray in the map coordinate frame pointing at the
         # person who called us (in the form R = s + m*d)
 
@@ -420,4 +434,4 @@ class TravelToRequest(Travelling):
         return "TravelToRequest"
 
     def next(self, input_array):
-        super(TravelToRequest, self).next(input_array)
+        return super(TravelToRequest, self).next(input_array)

@@ -182,4 +182,20 @@ class ItemDatabase:
                 return measure
         raise NoToolsTimedOutError
 
+    def get_timed_out_tool_named(self):
+        for grabby in self.pliers:
+            if grabby.is_timed_out():
+                return "pliers"
+        for twisty in self.screw_drivers:
+            if twisty.is_timed_out():
+                return "screw driver"
+        for cutty in self.wire_strippers:
+            if cutty.is_timed_out():
+                return "wire strippers"
+        for measure in self.vernier_calipers:
+            if measure.is_timed_out():
+                return "vernier calipers"
+        raise NoToolsTimedOutError
+
+
 item_database = ItemDatabase()

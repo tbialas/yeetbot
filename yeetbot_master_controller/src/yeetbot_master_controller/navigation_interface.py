@@ -48,7 +48,6 @@ class NavigationInterface:
             elif len(self.status.status_list) == 0:
                 return NOTHING
             status = self.status.status_list[-1].status
-            rospy.logwarn(status)
             if status == GoalStatus.ACTIVE:
                 return ACTIVE
             elif status == GoalStatus.SUCCEEDED:
