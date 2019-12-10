@@ -14,6 +14,8 @@
         <remap from="yeetbot_pose_estimate" 
                to="window_yeetbot_pose_estimate"/>
     </node>
+    <node name="human_stitcher" pkg="yeetbot_humandetector" 
+          type="human_stitcher.py" output="screen"/>
 
     <include file="$(find yeetbot_localisation)/launch/camera_locations.launch"/>
     <include file="$(find yeetbot_localisation)/launch/localisation.launch"/>
