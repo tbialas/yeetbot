@@ -41,18 +41,18 @@ def init():
     subprocess.call(["killall", "matrix-odas"])
 
     #serial port initialise and handshake
-    computer = serial.Serial(
-        port = '/dev/ttyACM0',
-        baudrate=115200,
-        timeout=0.5)
+    #computer = serial.Serial(
+    #    port = '/dev/ttyACM0',
+    #    baudrate=115200,
+    #    timeout=0.5)
    
-    done = 0
-    while not done:
-        cmd = computer.read_until(">yeet<")
-        if cmd == ">yeet<":
-            done = 1
+    #done = 0
+    #while not done:
+    #    cmd = computer.read_until(">yeet<")
+    #    if cmd == ">yeet<":
+    #        done = 1
 
-    computer.write(">ack<")
+    #computer.write(">ack<")
 
     #initialise ros variables
     manager = multiprocessing.Manager()
