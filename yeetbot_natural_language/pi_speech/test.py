@@ -9,6 +9,7 @@ import serial
 import multiprocessing
 import time
 from collections import deque
+from ctypes import c_bool
 from google.cloud import speech
 from google.cloud import texttospeech
 from google.cloud.speech import enums
@@ -25,12 +26,15 @@ def init():
     global doa_matrix
     global doa_odas
     global text
+    global snowboy_lock
+    global wake_word_detected
+    global wakeword_process
     
     subprocess.call(["killall", "odaslive"])
     subprocess.call(["killall", "matrix-odas"])
 
     #initialise ros variables
-    state = 1
+    state = 0
     inventory = ["hammer", "pliers", "screwdriver"]
     ros_buffer = deque()
     buffer_lock = multiprocessing.Lock()
@@ -41,19 +45,59 @@ def init():
     doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
     
+    #start wake word detection
+    with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w+") as f:
+        f.write("0")
+        
+    wake_word_detected = multiprocessing.Value(c_bool, False)
+    snowboy_lock = multiprocessing.Lock()
+    start_wake_word()
+    wakeword_process = multiprocessing.Process(target=listen_wake_word)
+    wakeword_process.start()
+    
     text = "yeetbot 3000, online"
 
+def start_wake_word():
+    global snowboy
+    global wakeword_process
+    
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
+    #snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"], stdout=subprocess.PIPE)
+    snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+    
+    wakeword_process = multiprocessing.Process(target=listen_wake_word)
+    wakeword_process.start()
+    
 def listen_wake_word():
-    print('mlem')
-
+    global snowboy
+    global wake_word_detected
+    
+    while True:
+        time.sleep(0.2)
+        with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
+            if f.read() == "1":
+                wake_word_detected.value = True
+                print "hello!"
+            else:
+                print "bye!"
+                wake_word_detected.value = False
+    
 def wait_for_input():
     delay = raw_input("input anything for YEETBot to listen; to quit input 'quit'\n")
     if delay == "quit":
         sys.exit()
 
 def record_speech():
+    global wakeword_process
     print("listening...\n")
+    
+    snowboy.send_signal(signal.SIGINT)
+    wakeword_process.terminate()
+    wakeword_process.join()
+    subprocess.call(["killall", "arecord"])
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "3", "-D", "hw:2,0"])
+    start_wake_word()
 
 def doa_restart():
     global doa_matrix
@@ -121,13 +165,22 @@ def tts(text):
 
 def main():
     global text 
+    global wake_word_detected
+    
     init()
+    
     while True:
-        wait_for_input()
+        while not wake_word_detected.value:
+            time.sleep(0.05)
+            print 'yeet'
+        with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
+            f.write("0")
         if state == 0:
             record_speech()
-    	    doa_restart()
-            transcribe_file("recording.wav")
+            tts(text)
+            doa_restart()
+            wake_word_detected.value = False
+            #transcribe_file("recording.wav")
         elif state == 1:
             tts(text)
 

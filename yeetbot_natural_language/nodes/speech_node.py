@@ -3,6 +3,7 @@
 import serial
 import time
 import rospy
+from std_msgs.msg import String
 from yeetbot_msgs.msg import YEETBotUserResponse, YEETBotUserChoices, YEETBotState
 
 def init():
@@ -32,9 +33,10 @@ def init():
     rospy.init_node('yeet_speech')
     pub_response = rospy.Publisher("/user_response", YEETBotUserResponse, queue_size=10)
     pub_doa = rospy.Publisher("/localisation", YEETBotLocalisation, queue_size=10)
+    pub_state = rospy.Publisher("/yeetbot_state", YEETBotState, queue_size=10)
     rospy.Subscriber("/user_choices", YEETBotUserChoices, choiceCallback)
     rospy.Subscriber("/yeetbot_state", YEETBotState, stateCallback) 
-    rospy.Subscriber("/speech_string", YEETBotSpeech, speechCallback)
+    rospy.Subscriber("/text_msg", String, speechCallback)
 
 def choiceCallback(user_choices):
     global inventory
@@ -76,6 +78,13 @@ def main():
                 msg = YEETBotLocalisation()
                 msg.doa = float(serial_info)
                 pub_doa.publish(msg)
+                rospy.loginfo(msg)
+                
+            #state
+            elif topic == ">s/":
+                msg = YEETBotState()
+                msg.current_state = int(msg)
+                pub_state.publish(msg)
                 rospy.loginfo(msg)
 
     pi.write("quit")
