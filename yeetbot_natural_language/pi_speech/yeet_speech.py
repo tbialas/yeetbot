@@ -41,11 +41,11 @@ def init():
     subprocess.call(["killall", "matrix-odas"])
 
     #serial port initialise and handshake
-    #computer = serial.Serial(
-    #    port = '/dev/ttyACM0',
-    #    baudrate=115200,
-    #    timeout=0.5)
-   
+    computer = serial.Serial(
+        port = '/dev/ttyACM0',
+        baudrate=115200,
+        timeout=0.5)
+    computer.write("YEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEET")
     #done = 0
     #while not done:
     #    cmd = computer.read_until(">yeet<")
@@ -68,7 +68,7 @@ def init():
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
     #initialise thread for listening to computer and reading buffer and wakeword
-    port = multiprocessing.Process(target=listen_serial, args=(ros_buffer, inventory))
+    port = multiprocessing.Process(target=listen_serial, args=(ros_buffer,))
     port.start()
 
     read_buffer = multiprocessing.Process(target=read_ros_buffer, args=(ros_buffer,))
@@ -119,18 +119,18 @@ def listen_wake_word():
             else:
                 wake_word_detected.value = False
 
-def read_ros_buffer(queue, inventory):
+def read_ros_buffer(queue):
     while True:
         with buffer_lock:
             if not ros_buffer.empty():
                 msg = ros_buffer.get()
-                update_states(msg, inventory)
+                update_states(msg)
             else:
                 continue
         time.sleep(0.3)
 
-def update_states(msg, inventory):
-
+def update_states(msg):
+    global inventory
     topic, msg = msg[:3], msg[3:-1]
     
     #inventory update
