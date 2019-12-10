@@ -3,4 +3,7 @@
           type="drawer_node.py"/>
 
     <include file="$(find yeetbot_navigation)/launch/main_nav.launch"/>
+
+    <node name="speech_node" pkg="yeetbot_natural_language"
+          type="speech_node.py" output="screen"/>
 </launch>
