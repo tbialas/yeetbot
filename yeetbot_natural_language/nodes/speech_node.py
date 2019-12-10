@@ -21,12 +21,12 @@ def init():
 
     pi.write(">yeet<")
 
-    while not done:
-        cmd = pi.read_until("<")
-        if cmd == ">ack<":
-            done = 1
-        else:
-            print("Unexpected: '",cmd,"' from speech pi")
+    #while not done:
+    #    cmd = pi.read_until("<")
+    #    if cmd == ">ack<":
+    #        done = 1
+    #    else:
+    #        print("Unexpected: '",cmd,"' from speech pi")
     
     state = 0
     inventory = []
