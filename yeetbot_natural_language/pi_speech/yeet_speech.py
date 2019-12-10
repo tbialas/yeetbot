@@ -38,6 +38,7 @@ def init():
     global manager
     global state
     global inventory
+    global ros_buffer
     
     subprocess.call(["killall", "odaslive"])
     subprocess.call(["killall", "matrix-odas"])
@@ -121,6 +122,7 @@ def listen_wake_word():
                 wake_word_detected.value = False
 
 def read_ros_buffer(queue):
+    global ros_buffer
     while True:
         with buffer_lock:
             if not ros_buffer.empty():
@@ -160,9 +162,6 @@ def send_state(next_state):
     msg = ">s/" + next_state + "<"
     computer.write(msg)
 
-def wake_word_detected():
-    doa_restart()
-    
 def wait_for_input():
     delay = raw_input("input anything for YEETBot to listen; to quit input 'quit'\n")
     if delay == "quit":
@@ -236,7 +235,7 @@ def transcribe_file(speech_file):
     #over serial, user response composed as ">u/[choice],[invalid_choice]"
 
     serial_user_response = ""
-    
+
     for result in response.results:
         sentence = result.alternatives[0].transcript.split()
         serial_user_response = ">u/"
