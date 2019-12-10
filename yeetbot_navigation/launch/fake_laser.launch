@@ -1,5 +1,5 @@
 <launch>
-  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="fake_lazor">
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="kinect_fake_lazor">
       
     <param name="min_height" value="-1.0"/>
     <param name="max_height" value="0.5"/>
@@ -19,4 +19,26 @@
     <!-- Topic to which LaserScan will be published -->
     <remap from="scan" to="/scan2_electric_boogaloo"/>
   </node>
+<group if="False">
+  <node pkg="pointcloud_to_laserscan" type="pointcloud_to_laserscan_node" name="rear_sonar_fake_lazor">
+      
+    <param name="min_height" value="-1.0"/>
+    <param name="max_height" value="0.5"/>
+      
+    <!-- Min and max range range of generated laser scan - set this to match your depth sensor -->
+    <param name="range_min" value="0.4"/>
+    <param name="range_max" value="1.8"/>
+    <param name="angle_min" value="-0.7854"/>
+    <param name="angle_max" value="0.7854"/>
+
+    <!-- Frame of your depth sensor -->
+    <param name="target_frame" value="base_link"/>
+
+    <!-- Topic from which to read PointCloud2 -->
+    <remap from="cloud_in" to="/sonar"/>
+    
+    <!-- Topic to which LaserScan will be published -->
+    <remap from="scan" to="/rear_scan2"/>
+  </node>
+</group>
 </launch>

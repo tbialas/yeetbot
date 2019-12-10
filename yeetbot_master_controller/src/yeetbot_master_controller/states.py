@@ -72,6 +72,7 @@ class Travelling(State):
     def __init__(self, goal=PoseStamped()):
         publish_state_update(YEETBotState.TRAVELLING)
 
+        user_interface.reset()
         self.current_goal = goal
         self.new_goal = goal
         nav_interface.goto_pos(self.current_goal)
@@ -153,6 +154,8 @@ class LendTool(State):
     def __init__(self):
         publish_state_update(YEETBotState.GIVING_TOOL)
 
+        user_interface.reset()
+
         tool = user_interface.tool_requested
         if(tool != 'pliers' and tool != 'screw_driver'
            and tool != 'wire_strippers' and tool != 'vernier_calipers'):
@@ -198,6 +201,8 @@ class ReturnTool(State):
     def __init__(self):
         # TODO: Check whether the tool is early or on time
         publish_state_update(YEETBotState.RECEIVING_TOOL_ON_TIME)
+
+        user_interface.reset()
 
         tool = user_interface.tool_requested
         if(tool != 'pliers' and tool != 'screw_driver'
@@ -252,6 +257,10 @@ class ForceReturn(Travelling):
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
         self.tool = item_database.get_timed_out_tool_named()
 
+        speech_msg = String()
+        speech_msg.data = "I am looking for my " + self.tool + ". Please return it to me."
+        text_msg_pub.publish(speech_msg)
+
     def run(self):
         super(ForceReturn, self).run()
         if self.state == navigation_interface.ARRIVED:
@@ -278,6 +287,10 @@ class ReturnHome(Travelling):
         home.pose.orientation.w = cos(HOME_YAW / 2)
         home.pose.orientation.z = sin(HOME_YAW / 2)
         super(ReturnHome, self).__init__(goal=home)
+
+        speech_msg = String()
+        speech_msg.data = "I am currently returning home. Please mind out of my way!"
+        text_msg_pub.publish(speech_msg)
     
     def run(self):
         super(ReturnHome, self).run()
@@ -323,6 +336,10 @@ class TravelToRequest(Travelling):
     def __init__(self):
         (target, self.id) = self.calculate_target_pose()
         super(TravelToRequest, self).__init__(goal=target)
+
+        speech_msg = String()
+        speech_msg.data = "I'm on my way to help you! Please don't move too much or I might get lost..."
+        text_msg_pub.publish(speech_msg)
 
     def calculate_target_pose(self):
         try:

@@ -3,7 +3,7 @@
 import serial
 import time
 import rospy
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from yeetbot_msgs.msg import YEETBotUserResponse, YEETBotUserChoices, YEETBotState
 
 def init():
@@ -14,7 +14,7 @@ def init():
 
     #serial setup and handshake
     pi = serial.Serial(
-        port = '/dev/ttyACM0',
+        port = '/dev/ttyS0',
         baudrate=115200,
         timeout=0.5)
     done = 0
