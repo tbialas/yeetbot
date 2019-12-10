@@ -36,6 +36,8 @@ def init():
     global wake_word_detected
     global wakeword_process
     global manager
+    global state
+    global inventory
     
     subprocess.call(["killall", "odaslive"])
     subprocess.call(["killall", "matrix-odas"])
@@ -100,7 +102,6 @@ def start_wake_word():
     global wakeword_process
     
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
-    #snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"], stdout=subprocess.PIPE)
     snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
     
@@ -233,6 +234,9 @@ def transcribe_file(speech_file):
     response = client.recognize(config, audio)
 
     #over serial, user response composed as ">u/[choice],[invalid_choice]"
+
+    serial_user_response = ""
+    
     for result in response.results:
         sentence = result.alternatives[0].transcript.split()
         serial_user_response = ">u/"
