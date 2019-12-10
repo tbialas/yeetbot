@@ -312,13 +312,16 @@ class ROSTensorFlow(object):
             print("DEPTH IS {0}".format(depth_median))
             print(match)
 
-            x, y, _ = self.img_proc.projectPixelTo3dRay((center_x, center_y))
+            x, y, j = self.img_proc.projectPixelTo3dRay((center_x, center_y))
         #    print(x)
         #    print(y)
             
             z = (depth_median)
         #    print(z)
-                #self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
+            lam = z/j
+            x = lam * x
+            y = lam * y
+            self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}_{1}'.format(self.kinect, i), self.camera_frame)
             
             quat = tf.transformations.quaternion_from_euler(0,1.5,0)
 
