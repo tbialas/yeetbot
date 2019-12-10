@@ -267,73 +267,73 @@ class ROSTensorFlow(object):
             #print(depth_frame[0])
             #print("BOXES COORDS")
             #print(boxes_coords)
-            print(sort_input)
-            sort_input = np.array(sort_input)
-            track_ids = self.SORT.update(sort_input)
-            print(track_ids)
+        print(sort_input)
+        sort_input = np.array(sort_input)
+        track_ids = self.SORT.update(sort_input)
+        print(track_ids)
 
 
-            out_pose = YEETBotHumanPoseArray()
-            out_pose.header.stamp = color_msg.header.stamp
-            out_pose.header.frame_id = self.camera_frame
-            poses1 = list()
-            ids = list()
-            for match in track_ids:
-                print("{0}".format((match[0], match[1])))
+        out_pose = YEETBotHumanPoseArray()
+        out_pose.header.stamp = color_msg.header.stamp
+        out_pose.header.frame_id = self.camera_frame
+        poses1 = list()
+        ids = list()
+        for match in track_ids:
+            print("{0}".format((match[0], match[1])))
                 
-                ids.append(match[4])
+            ids.append(int(match[4]))
 
-                center_x = int((match[0] + match[2])/2)
-                center_y = int((match[1] + match[3])/2)
-                center = (center_x, center_y)
+            center_x = int((match[0] + match[2])/2)
+            center_y = int((match[1] + match[3])/2)
+            center = (center_x, center_y)
                 
-                box_w = match[2] - match[0]
-                box_h = match[3] - match[1]
-                depth_min_y = int(center_y - box_h/4)
-                depth_max_y = int(center_y + box_h/4)
-                depth_min_x = int(center_x - box_w/4)
-                depth_max_x = int(center_x + box_w/4)
+            box_w = match[2] - match[0]
+            box_h = match[3] - match[1]
+            depth_min_y = int(center_y - box_h/4)
+            depth_max_y = int(center_y + box_h/4)
+            depth_min_x = int(center_x - box_w/4)
+            depth_max_x = int(center_x + box_w/4)
 
-                depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
+            depth_frame = frame_depth[depth_min_y:depth_max_y, depth_min_x:depth_max_x]
                     #np.nan_to_num(depth_frame, False, 10)
                     #depth_frame = depth_frame
-                if (self.kinect == "window"):
-                    depth_median = np.nanmedian(depth_frame)/1000
-                elif (self.kinect == "door"):
-                    depth_median = np.nanmedian(depth_frame)
+            if (self.kinect == "window"):
+                depth_median = np.nanmedian(depth_frame)/1000
+            elif (self.kinect == "door"):
+                depth_median = np.nanmedian(depth_frame)
                 
-                np.append(match, [depth_median])
+            np.append(match, [depth_median])
                     #print("TYPE")
                     #print(type(depth_frame))
                     #print(depth_frame)
                     #depth_frames.append(depth_frame)
                     #depths.append(depth_median)
-                print("OBJECT {0}".format(match))
-                print("DEPTH IS {0}".format(depth_median))
-                print(match)
+            print("OBJECT {0}".format(match))
+            print("DEPTH IS {0}".format(depth_median))
+            print(match)
 
-                x, y, _ = self.img_proc.projectPixelTo3dRay((center_x, center_y))
+            x, y, _ = self.img_proc.projectPixelTo3dRay((center_x, center_y))
         #    print(x)
         #    print(y)
             
-                z = (depth_median)
+            z = (depth_median)
         #    print(z)
                 #self.tf_broadcaster.sendTransform([x, y, z], tf.transformations.quaternion_from_euler(0,0,0), color_msg.header.stamp, '/humanpos_{0}'.format(i), self.camera_frame)
             
-                quat = tf.transformations.quaternion_from_euler(0,1.5,0)
+            quat = tf.transformations.quaternion_from_euler(0,1.5,0)
 
-                pose1 = Pose()
-                pose1.position.x = x
-                pose1.position.y = y
-                pose1.position.z = z
-                pose1.orientation.x = quat[0]
-                pose1.orientation.y = quat[1]
-                pose1.orientation.z = quat[2]
-                pose1.orientation.w = quat[3]
-                poses1.append(pose1)
+            pose1 = Pose()
+            pose1.position.x = x
+            pose1.position.y = y
+            pose1.position.z = z
+            pose1.orientation.x = quat[0]
+            pose1.orientation.y = quat[1]
+            pose1.orientation.z = quat[2]
+            pose1.orientation.w = quat[3]
+            poses1.append(pose1)
                 
-                cv2.rectangle(frame_rgb, (int(match[0]), int(match[1])),(int(match[2]),int(match[3])) ,(0, 255, 0), 2)
-                cv2.putText(frame_rgb, "Human {0}".format(match[4]), (int(match[0]), int(match[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+            cv2.rectangle(frame_rgb, (int(match[0]), int(match[1])),(int(match[2]),int(match[3])) ,(0, 255, 0), 2)
+            cv2.putText(frame_rgb, "Human {0}".format(match[4]), (int(match[0]), int(match[1])), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
                 
 
@@ -352,16 +352,17 @@ class ROSTensorFlow(object):
 
             #cv2.imshow('Object detector', frame_color)
 
-            t2 = cv2.getTickCount()
-            time1 = (t2-t1)/self.freq
-            frame_rate_calc = 1/time1
+        t2 = cv2.getTickCount()
+        time1 = (t2-t1)/self.freq
+        frame_rate_calc = 1/time1
 
-            rospy.logwarn("FPS: {0:.2f}".format(frame_rate_calc))
+        rospy.logwarn("FPS: {0:.2f}".format(frame_rate_calc))
 
 
-            out_pose.ids = ids
-            out_pose.human_poses.poses = poses1
-            self.pub_pose.publish(out_pose)
+        out_pose.ids = ids
+        out_pose.human_poses.poses = poses1
+        print(out_pose)
+        self.pub_pose.publish(out_pose)
 
             #objects = self.ct.update(center_pointsd.copy())
 
