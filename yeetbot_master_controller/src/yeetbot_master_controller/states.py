@@ -72,6 +72,7 @@ class Travelling(State):
     def __init__(self, goal=PoseStamped()):
         publish_state_update(YEETBotState.TRAVELLING)
 
+        user_interface.reset()
         self.current_goal = goal
         self.new_goal = goal
         nav_interface.goto_pos(self.current_goal)
@@ -153,6 +154,8 @@ class LendTool(State):
     def __init__(self):
         publish_state_update(YEETBotState.GIVING_TOOL)
 
+        user_interface.reset()
+
         tool = user_interface.tool_requested
         if(tool != 'pliers' and tool != 'screw_driver'
            and tool != 'wire_strippers' and tool != 'vernier_calipers'):
@@ -198,6 +201,8 @@ class ReturnTool(State):
     def __init__(self):
         # TODO: Check whether the tool is early or on time
         publish_state_update(YEETBotState.RECEIVING_TOOL_ON_TIME)
+
+        user_interface.reset()
 
         tool = user_interface.tool_requested
         if(tool != 'pliers' and tool != 'screw_driver'
