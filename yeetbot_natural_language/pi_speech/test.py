@@ -15,6 +15,8 @@ from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
+ANGLE_ELEMENT_NUM = 10
+
 def init():
     global computer
     global state
@@ -78,9 +80,7 @@ def listen_wake_word():
         with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
             if f.read() == "1":
                 wake_word_detected.value = True
-                print "hello!"
             else:
-                print "bye!"
                 wake_word_detected.value = False
     
 def wait_for_input():
@@ -108,6 +108,11 @@ def doa_restart():
     doa_odas.send_signal(signal.SIGINT)
     time.sleep(0.2)
     doa_matrix.send_signal(signal.SIGINT)
+    with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/angles.txt") as f:
+        print '/n'
+        fl = f.readlines()[0:ANGLE_ELEMENT_NUM]
+        doa = int(max(set(fl), key=fl.count))
+        print doa
     #restart process
     doa_matrix = subprocess.Popen(["./matrix-odas"])
     doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg"])
@@ -172,7 +177,6 @@ def main():
     while True:
         while not wake_word_detected.value:
             time.sleep(0.05)
-            print 'yeet'
         with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
             f.write("0")
         if state == 0:

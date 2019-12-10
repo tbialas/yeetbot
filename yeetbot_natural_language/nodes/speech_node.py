@@ -32,7 +32,7 @@ def init():
     inventory = []
     rospy.init_node('yeet_speech')
     pub_response = rospy.Publisher("/user_response", YEETBotUserResponse, queue_size=10)
-    pub_doa = rospy.Publisher("/localisation", YEETBotLocalisation, queue_size=10)
+    pub_doa = rospy.Publisher("/yeetbot_voice_direction", Float64, queue_size=10)
     pub_state = rospy.Publisher("/yeetbot_state", YEETBotState, queue_size=10)
     rospy.Subscriber("/user_choices", YEETBotUserChoices, choiceCallback)
     rospy.Subscriber("/yeetbot_state", YEETBotState, stateCallback) 
@@ -75,8 +75,7 @@ def main():
                 
             #doa
             elif topic == ">a/":
-                msg = YEETBotLocalisation()
-                msg.doa = float(serial_info)
+                msg = float(serial_info)
                 pub_doa.publish(msg)
                 rospy.loginfo(msg)
                 
