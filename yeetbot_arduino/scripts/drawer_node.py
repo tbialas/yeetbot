@@ -45,7 +45,7 @@ from yeetbot_msgs.msg import YEETBotDrawerStates, YEETBotItemStates
 
 arduino = serial.Serial(
     port = '/dev/arduino',
-    baudrate=115200)
+    baudrate=115200, timeout = 5)
 STATES = [[0,0,0,0],[0,0,0,0]]    
 OLD_DRAWER_STATES = [0,0,0,0]
 OLD_ITEM_STATES = [1,1,1,1]
