@@ -11,12 +11,12 @@ TrajectoryPlannerROS:
     acc_lim_y: 0
 
     holonomic_robot: false
-    xy_goal_tolerance: 0.5
+    xy_goal_tolerance: 1.5
     yaw_goal_tolerance: 0.3
 
     sim_granularity: 0.05
     sim_time: 2.5
     meter_scoring: true
-    pdist_scale: 0.6
-    gdist_scale: 0.8
+    pdist_scale: 0.8
+    gdist_scale: 0.9
     occ_dist: 0.2
