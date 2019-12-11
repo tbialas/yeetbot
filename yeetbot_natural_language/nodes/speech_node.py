@@ -7,7 +7,9 @@ from std_msgs.msg import String, Float64
 from yeetbot_msgs.msg import YEETBotUserResponse, YEETBotUserChoices, YEETBotState
 
 def init():
-    global pub
+    global pub_response
+    global pub_doa
+    global pub_state
     global state
     global inventory
     global pi
@@ -51,7 +53,7 @@ def stateCallback(yeetbot_state):
     pi.write(serial_state)
 
 def speechCallback(speech_string):
-    yeet_speak = speech_string.text
+    yeet_speak = speech_string.data
     serial_speech = ">m/" + yeet_speak + "<"
     pi.write(serial_speech)
 
