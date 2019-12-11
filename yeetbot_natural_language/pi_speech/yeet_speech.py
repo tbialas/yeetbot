@@ -119,10 +119,10 @@ def listen_wake_word():
     while True:
         time.sleep(0.25)
         with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
-            if f.read() == "1" and state.val == IDLE:
+            if f.read() == "1" and state.value == IDLE:
                 doa_restart()
                 f.write("0")
-                request_needed.val = True
+                request_needed.value = True
 
 def read_ros_buffer(queue):
     global ros_buffer
@@ -146,7 +146,7 @@ def update_states(msg):
             inventory.append(tool)
     #state update
     elif topic == ">s/":
-        state.val = msg
+        state.value = msg
     #make yeetbot speak
     elif topic == ">m/":
         tts(msg)
@@ -190,7 +190,7 @@ def record_speech():
     subprocess.call(["killall", "arecord"])
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
     doa_restart()
-    request_needed.val = False
+    request_needed.value = False
     start_wake_word()    
 
 def tts(text):
@@ -266,24 +266,24 @@ def main():
     
     init()
     while True:
-        if state.val == IDLE:
+        if state.value == IDLE:
             time.sleep(0.05)
 
-        elif state.val == RECEIVING_REQUEST:
-            if request_needed.val:
+        elif state.value == RECEIVING_REQUEST:
+            if request_needed.value:
                 record_speech()
             else:
                 time.sleep(0.05)
 
-        elif state.val == RECEIVING_TOOL_EARLY:
+        elif state.value == RECEIVING_TOOL_EARLY:
             time.sleep(0.05)
-        elif state.val == RECEIVING_TOOL_LATE:
+        elif state.value == RECEIVING_TOOL_LATE:
             time.sleep(0.05)
-        elif state.val == RECEIVING_TOOL_ON_TIME:
+        elif state.value == RECEIVING_TOOL_ON_TIME:
             time.sleep(0.05)
-        elif state.val == GIVING_TOOL:
+        elif state.value == GIVING_TOOL:
             time.sleep(0.05)
-        elif state.val == TRAVELLING:
+        elif state.value == TRAVELLING:
             time.sleep(0.05)
         else:
             time.sleep(0.05)
