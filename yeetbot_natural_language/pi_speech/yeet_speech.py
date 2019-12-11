@@ -48,24 +48,29 @@ def init():
 
     #serial port initialise and handshake
     done = 0
-    while not done:
-        try:
-            computer = serial.Serial(
-                port = '/dev/ttyACM1',
-                baudrate=115200,
-                timeout=0.5)
-            done = 1
-        except:
-            print "waiting for serial connection"
+    #while not done:
+    #    try:
+    #        computer = serial.Serial(
+    #            port = '/dev/mbed',
+    #            baudrate=115200,
+    #            timeout=0.5)
+    #        done = 1
+    #    except:
+    #        print "waiting for serial connection"
 
-    computer.write("pi speech alive")
+    computer = serial.Serial(
+        port = '/dev/mbed',
+        baudrate=115200,
+        timeout=0.5)
+
+    #computer.write("pi speech alive")
     #done = 0
     #while not done:
     #    cmd = computer.read_until(">yeet<")
     #    if cmd == ">yeet<":
     #        done = 1
 
-    #computer.write(">ack<")
+    computer.write(">yeet<")
 
     #initialise ros variables
     manager = multiprocessing.Manager()
