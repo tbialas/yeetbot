@@ -52,8 +52,9 @@ OLD_ITEM_STATES = [1,1,1,1]
 
 DENOISED_ITEM_STATES = [0,0,0,0]
 OLD_DENOISED_ITEM_STATES = [1,1,1,1]
+OLD_ITEM_STATES_ARR = [[],[],[],[]]
 DASH = [0,0,0,0]
-max_count = 5;
+max_count = 7;
 count = 0;
 
 #1-plier
@@ -62,6 +63,7 @@ count = 0;
 
 
 def callback(drawer_states_msg):
+    print drawer_states_msg
     if drawer_states_msg.plier_drawer:
         command = ">1o<"
     else:
@@ -101,6 +103,7 @@ def talker():
     global DASH
     global DENOISED_ITEM_STATES
     global OLD_DENOISED_ITEM_STATES
+    global OLD_ITEM_STATES_ARR
     #arduino.open()
     
     done = 0
@@ -138,6 +141,11 @@ def talker():
     item_msg.vernier_calipers = [OLD_ITEM_STATES[1]]
     item_status_pub.publish(item_msg)
 
+    for k in range(4):
+        OLD_ITEM_STATES_ARR[k] = []
+        for i in range(max_count):
+            OLD_ITEM_STATES_ARR[k].append(OLD_ITEM_STATES[k])
+        DENOISED_ITEM_STATES[k] = OLD_ITEM_STATES[k]
     
     
     print("Initial message sents. About to enter loop")
@@ -145,29 +153,28 @@ def talker():
     rate = rospy.Rate(1) # 1 Hz
     
     while not rospy.is_shutdown():
-        
-        
-        # drawer_msg.x = y
-        # drawer_status_pub.publish(drawer_msg)
-        
-        
+
         STATES = getStates()
         DRAWER_STATES = STATES[0]
         ITEM_STATES = STATES[1]
 
-	# denoising
         for num, item in enumerate(ITEM_STATES, start=0):
-            if item is 1:
-                DASH[num] = 1
-        count = count + 1
+            OLD_ITEM_STATES_ARR[num][count] = item
 
-        if count >= max_count:
-	    count = 0
-	    for num, item in enumerate(DASH, start=0):
-                DENOISED_ITEM_STATES[num] = item
-	        DASH = [0,0,0,0]
+	# denoising
+        for num, arr in enumerate(OLD_ITEM_STATES_ARR, start=0):
+            for item in arr:
+                if item is 1:
+                    DASH[num] = 1
+        count = count + 1
+        count = count % max_count
+
+        for num, item in enumerate(DASH, start=0):
+            DENOISED_ITEM_STATES[num] = item
+        DASH = [0,0,0,0]
 
         print DENOISED_ITEM_STATES
+        print OLD_ITEM_STATES_ARR
         
         if OLD_DRAWER_STATES != DRAWER_STATES:
             OLD_DRAWER_STATES = DRAWER_STATES
@@ -186,12 +193,18 @@ def talker():
          #   item_status_pub.publish(item_msg)
 
 	if OLD_DENOISED_ITEM_STATES != DENOISED_ITEM_STATES:
-            OLD_DENOISED_ITEM_STATES = DENOISED_ITEM_STATES
-            item_msg.pliers =  [DENOISED_ITEM_STATES[0]]
-            item_msg.screw_drivers = [DENOISED_ITEM_STATES[2]]
-            item_msg.wire_strippers = []
-            item_msg.vernier_calipers = [DENOISED_ITEM_STATES[1]]
-            item_status_pub.publish(item_msg)
+            changed = False
+            for i in range(len(DENOISED_ITEM_STATES)):
+                # Only accept changes if the drawer is open
+                if DRAWER_STATES[i] != 0:
+                    OLD_DENOISED_ITEM_STATES[i] = DENOISED_ITEM_STATES[i]
+                    changed = True
+            if changed:
+                item_msg.pliers =  [DENOISED_ITEM_STATES[0]]
+                item_msg.screw_drivers = [DENOISED_ITEM_STATES[2]]
+                item_msg.wire_strippers = []
+                item_msg.vernier_calipers = [DENOISED_ITEM_STATES[1]]
+                item_status_pub.publish(item_msg)
         
         # Maintain update frequency
         rate.sleep()
