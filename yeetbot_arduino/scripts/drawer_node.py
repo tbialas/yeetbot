@@ -53,7 +53,7 @@ OLD_ITEM_STATES = [1,1,1,1]
 DENOISED_ITEM_STATES = [0,0,0,0]
 OLD_DENOISED_ITEM_STATES = [1,1,1,1]
 DASH = [0,0,0,0]
-max_count = 7;
+max_count = 5;
 count = 0;
 
 #1-plier
@@ -155,18 +155,19 @@ def talker():
         DRAWER_STATES = STATES[0]
         ITEM_STATES = STATES[1]
 
-        print STATES
 	# denoising
         for num, item in enumerate(ITEM_STATES, start=0):
             if item is 1:
                 DASH[num] = 1
-            count = count + 1
+        count = count + 1
 
-        if count > max_count:
+        if count >= max_count:
 	    count = 0
 	    for num, item in enumerate(DASH, start=0):
                 DENOISED_ITEM_STATES[num] = item
 	        DASH = [0,0,0,0]
+
+        print DENOISED_ITEM_STATES
         
         if OLD_DRAWER_STATES != DRAWER_STATES:
             OLD_DRAWER_STATES = DRAWER_STATES
