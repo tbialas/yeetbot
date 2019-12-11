@@ -47,10 +47,17 @@ def init():
     request_text = "What can yeetbot for you?"
 
     #serial port initialise and handshake
-    computer = serial.Serial(
-        port = '/dev/ttyACM0',
-        baudrate=115200,
-        timeout=0.5)
+    done = 0
+    while not done:
+        try:
+            computer = serial.Serial(
+                port = '/dev/ttyACM0',
+                baudrate=115200,
+                timeout=0.5)
+            done = 1
+        except:
+            pass
+        
     computer.write("pi speech alive")
     #done = 0
     #while not done:
