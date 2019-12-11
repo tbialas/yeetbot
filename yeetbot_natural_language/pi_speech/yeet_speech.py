@@ -60,7 +60,7 @@ def init():
     computer = serial.Serial(
         port = '/dev/mbed',
         baudrate=115200,
-        timeout=0.5)
+        timeout=0.3)
 
     #computer.write("pi speech alive")
     #done = 0
@@ -104,11 +104,14 @@ def init():
 def listen_serial(queue):
     while True:
         cmd = ''
+        time.sleep(0.1)
         try:
             cmd = computer.read_until("<")
             if cmd:
                 with buffer_lock:
                     queue.put(cmd)
+                    if queue.qsize() > 2:
+                        queue.get()
         except:
             time.sleep(0.1)
 
@@ -211,6 +214,7 @@ def record_speech():
     start_wake_word()    
 
 def tts(text):
+    print text
     client = texttospeech.TextToSpeechClient()
     synthesis_input = texttospeech.types.SynthesisInput(text=text)
     voice = texttospeech.types.VoiceSelectionParams(
