@@ -94,12 +94,14 @@ def init():
 
 def listen_serial(queue):
     while True:
-        time.sleep(0.1)
         cmd = ''
-        cmd = computer.read_until("<")
-        if cmd:
-            with buffer_lock:
-                queue.put(cmd)
+        try:
+            cmd = computer.read_until("<")
+            if cmd:
+                with buffer_lock:
+                    queue.put(cmd)
+        except:
+            time.sleep(0.1)
 
 def start_wake_word():
     global snowboy
@@ -153,6 +155,7 @@ def update_states(msg):
 
 def deg2rad_mode(angle_list):
     doa = int(max(set(angle_list), key=angle_list.count))
+    print doa
     return str(round(math.radians(doa), 2))
 
 def send_doa():
