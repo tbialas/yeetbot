@@ -257,6 +257,10 @@ class ForceReturn(Travelling):
         publish_state_update(YEETBotState.RECEIVING_TOOL_LATE)
         self.tool = item_database.get_timed_out_tool_named()
 
+        speech_msg = String()
+        speech_msg.data = "I am looking for my " + self.tool + ". Please return it to me."
+        text_msg_pub.publish(speech_msg)
+
     def run(self):
         super(ForceReturn, self).run()
         if self.state == navigation_interface.ARRIVED:
@@ -283,6 +287,10 @@ class ReturnHome(Travelling):
         home.pose.orientation.w = cos(HOME_YAW / 2)
         home.pose.orientation.z = sin(HOME_YAW / 2)
         super(ReturnHome, self).__init__(goal=home)
+
+        speech_msg = String()
+        speech_msg.data = "I am currently returning home. Please mind out of my way!"
+        text_msg_pub.publish(speech_msg)
     
     def run(self):
         super(ReturnHome, self).run()
@@ -328,6 +336,10 @@ class TravelToRequest(Travelling):
     def __init__(self):
         (target, self.id) = self.calculate_target_pose()
         super(TravelToRequest, self).__init__(goal=target)
+
+        speech_msg = String()
+        speech_msg.data = "I'm on my way to help you! Please don't move too much or I might get lost..."
+        text_msg_pub.publish(speech_msg)
 
     def calculate_target_pose(self):
         try:
