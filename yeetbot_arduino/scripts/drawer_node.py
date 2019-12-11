@@ -50,6 +50,12 @@ STATES = [[0,0,0,0],[0,0,0,0]]
 OLD_DRAWER_STATES = [0,0,0,0]
 OLD_ITEM_STATES = [1,1,1,1]
 
+DENOISED_ITEM_STATES = [0,0,0,0]
+OLD_DENOISED_ITEM_STATES = [1,1,1,1]
+DASH = [0,0,0,0]
+max_count = 5;
+count = 0;
+
 #1-plier
 #2-caliper
 #3-screwdriver
@@ -127,6 +133,7 @@ def talker():
     item_msg.wire_strippers = []
     item_msg.vernier_calipers = [OLD_ITEM_STATES[1]]
     item_status_pub.publish(item_msg)
+
     
     
     print("Initial message sents. About to enter loop")
@@ -145,6 +152,17 @@ def talker():
         ITEM_STATES = STATES[1]
 
         print STATES
+	# denoising
+        for num, item in enumerate(ITEM_STATES, start=0):
+            if item is 1:
+                DASH[num] = 1
+            count = count + 1
+
+        if count > max_count:
+	    count = 0
+	    for num, item in enumerate(DASH, start=0):
+                DENOISED_ITEM_STATES[num] = item
+	        DASH = [0,0,0,0]
         
         if OLD_DRAWER_STATES != DRAWER_STATES:
             OLD_DRAWER_STATES = DRAWER_STATES
@@ -154,12 +172,20 @@ def talker():
             drawer_msg.vernier_caliper_drawer = DRAWER_STATES[1]
             drawer_status_pub.publish(drawer_msg)
             
-        if OLD_ITEM_STATES != ITEM_STATES:
-            OLD_ITEM_STATES = ITEM_STATES
-            item_msg.pliers =  [ITEM_STATES[0]]
-            item_msg.screw_drivers = [ITEM_STATES[2]]
+       # if OLD_ITEM_STATES != ITEM_STATES:
+        #    OLD_ITEM_STATES = ITEM_STATES
+         #   item_msg.pliers =  [ITEM_STATES[0]]
+         #   item_msg.screw_drivers = [ITEM_STATES[2]]
+         #   item_msg.wire_strippers = []
+         #   item_msg.vernier_calipers = [ITEM_STATES[1]]
+         #   item_status_pub.publish(item_msg)
+
+	if OLD_DENOISED_ITEM_STATES != DENOISED_ITEM_STATES:
+            OLD_DENOISED_ITEM_STATES = DENOISED_ITEM_STATES
+            item_msg.pliers =  [DENOISED_ITEM_STATES[0]]
+            item_msg.screw_drivers = [DENOISED_ITEM_STATES[2]]
             item_msg.wire_strippers = []
-            item_msg.vernier_calipers = [ITEM_STATES[1]]
+            item_msg.vernier_calipers = [DENOISED_ITEM_STATES[1]]
             item_status_pub.publish(item_msg)
         
         # Maintain update frequency
