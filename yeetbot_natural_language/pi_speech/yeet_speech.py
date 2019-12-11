@@ -56,8 +56,8 @@ def init():
                 timeout=0.5)
             done = 1
         except:
-            pass
-        
+            print "waiting for serial connection"
+
     computer.write("pi speech alive")
     #done = 0
     #while not done:
