@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>yeetbot_gui</name>
+  <name>yeetbot_arduino</name>
   <version>0.0.0</version>
   <description>The yeetbot_arduino package contains arduino code and a ros node to interface with the arduino.</description>
 

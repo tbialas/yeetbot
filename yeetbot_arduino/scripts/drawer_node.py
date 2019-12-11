@@ -50,6 +50,11 @@ STATES = [[0,0,0,0],[0,0,0,0]]
 OLD_DRAWER_STATES = [0,0,0,0]
 OLD_ITEM_STATES = [1,1,1,1]
 
+#1-plier
+#2-caliper
+#3-screwdriver
+
+
 def callback(drawer_states_msg):
     if drawer_states_msg.plier_drawer:
         command = ">1o<"
@@ -60,25 +65,25 @@ def callback(drawer_states_msg):
     #arduino.read_until("<") #Don't do anything with this info for now
     
     if drawer_states_msg.screw_driver_drawer:
-        command = ">2o<"
-    else:
-        command = ">2c<"
-    arduino.write(command)
-    #print (command)
-    #arduino.read_until("<") #Don't do anything with this info for now
-    
-    if drawer_states_msg.wire_stripper_drawer:
         command = ">3o<"
     else:
         command = ">3c<"
     arduino.write(command)
     #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
-      
-    if drawer_states_msg.vernier_caliper_drawer:
+    
+    if drawer_states_msg.wire_stripper_drawer:
         command = ">4o<"
     else:
         command = ">4c<"
+    arduino.write(command)
+    #print (command)
+    #arduino.read_until("<") #Don't do anything with this info for now
+      
+    if drawer_states_msg.vernier_caliper_drawer:
+        command = ">2o<"
+    else:
+        command = ">2c<"
     arduino.write(command)
     #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
@@ -112,15 +117,15 @@ def talker():
     OLD_DRAWER_STATES = STATES[0]
     OLD_ITEM_STATES = STATES[1]
     drawer_msg.plier_drawer = OLD_DRAWER_STATES[0]
-    drawer_msg.screw_driver_drawer = OLD_DRAWER_STATES[1]
-    drawer_msg.wire_stripper_drawer = OLD_DRAWER_STATES[2]
-    drawer_msg.vernier_caliper_drawer = OLD_DRAWER_STATES[3]
+    drawer_msg.screw_driver_drawer = OLD_DRAWER_STATES[2]
+    drawer_msg.wire_stripper_drawer = OLD_DRAWER_STATES[3]
+    drawer_msg.vernier_caliper_drawer = OLD_DRAWER_STATES[1]
     drawer_status_pub.publish(drawer_msg)
     
     item_msg.pliers =  [OLD_ITEM_STATES[0]]
-    item_msg.screw_drivers = [OLD_ITEM_STATES[1]]
-    item_msg.wire_strippers = [OLD_ITEM_STATES[2]]
-    item_msg.vernier_calipers = [OLD_ITEM_STATES[3]]
+    item_msg.screw_drivers = [OLD_ITEM_STATES[2]]
+    item_msg.wire_strippers = []
+    item_msg.vernier_calipers = [OLD_ITEM_STATES[1]]
     item_status_pub.publish(item_msg)
     
     
@@ -142,17 +147,17 @@ def talker():
         if OLD_DRAWER_STATES != DRAWER_STATES:
             OLD_DRAWER_STATES = DRAWER_STATES
             drawer_msg.plier_drawer = DRAWER_STATES[0]
-            drawer_msg.screw_driver_drawer = DRAWER_STATES[1]
-            drawer_msg.wire_stripper_drawer = DRAWER_STATES[2]
-            drawer_msg.vernier_caliper_drawer = DRAWER_STATES[3]
+            drawer_msg.screw_driver_drawer = DRAWER_STATES[2]
+            drawer_msg.wire_stripper_drawer = DRAWER_STATES[3]
+            drawer_msg.vernier_caliper_drawer = DRAWER_STATES[1]
             drawer_status_pub.publish(drawer_msg)
             
         if OLD_ITEM_STATES != ITEM_STATES:
             OLD_ITEM_STATES = ITEM_STATES
             item_msg.pliers =  [ITEM_STATES[0]]
-            item_msg.screw_drivers = [ITEM_STATES[1]]
-            item_msg.wire_strippers = [ITEM_STATES[2]]
-            item_msg.vernier_calipers = [ITEM_STATES[3]]
+            item_msg.screw_drivers = [ITEM_STATES[2]]
+            item_msg.wire_strippers = []
+            item_msg.vernier_calipers = [ITEM_STATES[1]]
             item_status_pub.publish(item_msg)
         
         # Maintain update frequency
