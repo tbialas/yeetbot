@@ -101,19 +101,16 @@ class ItemDatabase:
         msg = self.drawer_states
         if drawer == 'pliers':
             msg.plier_drawer = state
-            self.drawer_state_pub.publish(msg)
         elif drawer == 'screw_driver':
             msg.screw_driver_drawer = state
-            self.drawer_state_pub.publish(msg)
         elif drawer == 'wire_strippers':
             msg.wire_stripper_drawer = state
-            self.drawer_state_pub.publish(msg)
         elif drawer == 'vernier_calipers':
             msg.vernier_caliper_drawer = state
-            self.drawer_state_pub.publish(msg)
         else:
             print "{} is an unknown drawer!".format(drawer)
             raise NotImplementedError
+        self.drawer_state_pub.publish(msg)
 
     def wait_until_ready(self):
         while not self.is_ready() and not rospy.is_shutdown():

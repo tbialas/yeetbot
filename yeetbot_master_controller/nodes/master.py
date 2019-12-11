@@ -65,12 +65,16 @@ def main():
         # Check if any tools have been taken or removed
         if item_database.tool_taken:
             input_array['tool_removed'] = 1
+            print "Tool Removed"
         else:
             input_array['tool_removed'] = 0
+            print "Tool Not Removed"
         if item_database.tool_returned:
             input_array['tool_replaced'] = 1
+            print "Tool Replaced"
         else:
             input_array['tool_replaced'] = 0
+            print "Tool Not Replaced"
 
         # Check for low voltage from batteries
         if battery_voltage > 0 and battery_voltage < BATTERY_LOW_VOLTAGE:

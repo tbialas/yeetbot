@@ -7,7 +7,7 @@ from yeetbot_master_controller.exceptions import HumanDeadError
 
 
 # Length of a human year in seconds
-HUMAN_YEAR = 2
+HUMAN_YEAR = rospy.Duration(2)
 
 
 class Human:
@@ -24,7 +24,7 @@ class Human:
 class HumanTrackerInterface:
     def __init__(self):
         rospy.Subscriber(
-            "/humandetect_poses", YEETBotHumanPoseArray, self.pose_cb)
+            "/stitched_human_poses", YEETBotHumanPoseArray, self.pose_cb)
         rospy.Subscriber(
             "/yeetbot_voice_direction", Float64, self.voice_dir_cb)
         self.humans = []
@@ -38,8 +38,7 @@ class HumanTrackerInterface:
             raise HumanDeadError
 
     def bringout_your_dead(self):
-        for human in self.humans():
-            print human.id
+        for human in self.humans:
             dur = rospy.Time.now() - human.birthday
             if dur > HUMAN_YEAR:
                 self.humans.remove(human)
@@ -55,11 +54,11 @@ class HumanTrackerInterface:
                     break
             if matching_human != None:
                 matching_human.celebrate_birthday(
-                    pose_array.human_poses[it])
+                    pose_array.human_poses.poses[it])
             else:
                 self.humans.append(
                     Human(pose_array.ids[it], 
-                          pose=pose_array.human_poses[it]))
+                          pose=pose_array.human_poses.poses[it]))
 
         # Kill and remove humans who have not had a birthday for a long time
         self.bringout_your_dead()
