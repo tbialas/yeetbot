@@ -53,7 +53,7 @@ OLD_ITEM_STATES = [1,1,1,1]
 DENOISED_ITEM_STATES = [0,0,0,0]
 OLD_DENOISED_ITEM_STATES = [1,1,1,1]
 DASH = [0,0,0,0]
-max_count = 5;
+max_count = 7;
 count = 0;
 
 #1-plier
@@ -97,6 +97,10 @@ def callback(drawer_states_msg):
         
 
 def talker():
+    global count
+    global DASH
+    global DENOISED_ITEM_STATES
+    global OLD_DENOISED_ITEM_STATES
     #arduino.open()
     
     done = 0
