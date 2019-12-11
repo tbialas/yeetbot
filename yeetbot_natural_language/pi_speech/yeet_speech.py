@@ -51,7 +51,7 @@ def init():
     while not done:
         try:
             computer = serial.Serial(
-                port = '/dev/ttyACM0',
+                port = '/dev/ttyACM1',
                 baudrate=115200,
                 timeout=0.5)
             done = 1
@@ -155,7 +155,7 @@ def update_states(msg):
             inventory.append(tool)
     #state update
     elif topic == ">s/":
-        state.value = msg
+        state.value = int(msg)
     #make yeetbot speak
     elif topic == ">m/":
         tts(msg)
@@ -198,7 +198,7 @@ def record_speech():
     wakeword_process.terminate()
     wakeword_process.join()
     subprocess.call(["killall", "arecord"])
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:3,0"])
     doa_restart()
     request_needed.value = False
     start_wake_word()    
