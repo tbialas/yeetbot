@@ -34,7 +34,6 @@ def init():
     global doa_odas
     global snowboy_lock
     global request_needed
-    global wakeword_process
     global manager
     global state
     global inventory
@@ -99,8 +98,6 @@ def init():
     request_needed = multiprocessing.Value(c_bool, False)
     snowboy_lock = multiprocessing.Lock()
     start_wake_word()
-    wakeword_process = multiprocessing.Process(target=listen_wake_word)
-    wakeword_process.start()
     
     tts("yeetbot 3000, online")
 
@@ -135,8 +132,12 @@ def listen_wake_word():
         with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
             if f.read() == "1" and state.value == IDLE:
                 doa_restart()
-                f.write("0")
+                time.sleep(0.1)
                 request_needed.value = True
+        if request_needed.value:
+            time.sleep(1)
+            with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
+                f.write("0")
 
 def read_ros_buffer(queue):
     global ros_buffer
@@ -203,7 +204,8 @@ def record_speech():
     wakeword_process.terminate()
     wakeword_process.join()
     subprocess.call(["killall", "arecord"])
-    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:3,0"])
+    time.sleep(0.1)
+    subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
     doa_restart()
     request_needed.value = False
     start_wake_word()    
