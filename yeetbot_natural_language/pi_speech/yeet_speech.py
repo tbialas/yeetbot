@@ -17,13 +17,13 @@ from google.cloud.speech import enums
 from google.cloud.speech import types
 
 ANGLE_ELEMENT_NUM = 10
-IDLE = "0"
-RECEIVING_REQUEST = "1"
-RECEIVING_TOOL_EARLY = "2"
-RECEIVING_TOOL_ON_TIME = "3"
-RECEIVING_TOOL_LATE = "4"
-GIVING_TOOL = "5"
-TRAVELLING = "6"
+IDLE = 0
+RECEIVING_REQUEST = 1
+RECEIVING_TOOL_EARLY = 2
+RECEIVING_TOOL_ON_TIME = 3
+RECEIVING_TOOL_LATE = 4
+GIVING_TOOL = 5
+TRAVELLING = 6
 
 def init():
     global computer
@@ -33,22 +33,25 @@ def init():
     global doa_matrix
     global doa_odas
     global snowboy_lock
-    global wake_word_detected
+    global request_needed
     global wakeword_process
     global manager
     global state
     global inventory
     global ros_buffer
-    
+    global request_text
+
     subprocess.call(["killall", "odaslive"])
     subprocess.call(["killall", "matrix-odas"])
+
+    request_text = "What can yeetbot for you?"
 
     #serial port initialise and handshake
     computer = serial.Serial(
         port = '/dev/ttyACM0',
         baudrate=115200,
         timeout=0.5)
-    computer.write("YEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEET")
+    computer.write("pi speech alive")
     #done = 0
     #while not done:
     #    cmd = computer.read_until(">yeet<")
@@ -59,7 +62,7 @@ def init():
 
     #initialise ros variables
     manager = multiprocessing.Manager()
-    state = multiprocessing.Value('i', 0)
+    state = multiprocessing.Value('i', IDLE)
     inventory = manager.list()
     ros_buffer = multiprocessing.Queue()
     buffer_lock = multiprocessing.Lock()
@@ -81,7 +84,7 @@ def init():
     with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w+") as f:
         f.write("0")
         
-    wake_word_detected = multiprocessing.Value(c_bool, False)
+    request_needed = multiprocessing.Value(c_bool, False)
     snowboy_lock = multiprocessing.Lock()
     start_wake_word()
     wakeword_process = multiprocessing.Process(target=listen_wake_word)
@@ -111,15 +114,15 @@ def start_wake_word():
 
 def listen_wake_word():
     global snowboy
-    global wake_word_detected
+    global request_needed
     
     while True:
-        time.sleep(0.2)
+        time.sleep(0.25)
         with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
-            if f.read() == "1":
-                wake_word_detected.value = True
-            else:
-                wake_word_detected.value = False
+            if f.read() == "1" and state.val == IDLE:
+                doa_restart()
+                f.write("0")
+                request_needed.val = True
 
 def read_ros_buffer(queue):
     global ros_buffer
@@ -176,15 +179,19 @@ def wait_for_input():
 def record_speech():
     global snowboy
     global wakeword_process
-    
+    global request_needed
+    global request_text
+
     print("listening...\n")
+    tts(request_text)
     snowboy.send_signal(signal.SIGINT)
     wakeword_process.terminate()
     wakeword_process.join()
     subprocess.call(["killall", "arecord"])
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
     doa_restart()
-    start_wake_word()
+    request_needed.val = False
+    start_wake_word()    
 
 def tts(text):
     client = texttospeech.TextToSpeechClient()
@@ -255,23 +262,31 @@ def transcribe_file(speech_file):
     computer.write(serial_user_response)
 
 def main():
+    global request_needed
+    
     init()
     while True:
-        while not wake_word_detected.value:
+        if state.val == IDLE:
             time.sleep(0.05)
-            transcribe_file("recording.wav")
-        doa_restart()
-        wake_word_detected.value = False
-        with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
-            f.write("0")
-        while state.val != RECEIVING_REQUEST:
-            time.sleep(0.2)
-        record_speech()
-        transcribe_file("recording.wav")
-        while state != IDLE:
-            time.sleep(0.2)
-        
-        
-            
+
+        elif state.val == RECEIVING_REQUEST:
+            if request_needed.val:
+                record_speech()
+            else:
+                time.sleep(0.05)
+
+        elif state.val == RECEIVING_TOOL_EARLY:
+            time.sleep(0.05)
+        elif state.val == RECEIVING_TOOL_LATE:
+            time.sleep(0.05)
+        elif state.val == RECEIVING_TOOL_ON_TIME:
+            time.sleep(0.05)
+        elif state.val == GIVING_TOOL:
+            time.sleep(0.05)
+        elif state.val == TRAVELLING:
+            time.sleep(0.05)
+        else:
+            time.sleep(0.05)
+
 if __name__ == '__main__':
     main()
