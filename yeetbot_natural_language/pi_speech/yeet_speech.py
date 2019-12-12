@@ -43,6 +43,7 @@ def init():
     global inventory
     global ros_buffer
     global request_text
+    global wakeword_process
 
     subprocess.call(["killall", "odaslive"])
     #subprocess.call(["killall", "matrix-odas"])
