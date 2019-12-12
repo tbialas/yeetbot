@@ -81,7 +81,7 @@ def init():
     inventory = manager.list()
     ros_buffer = multiprocessing.Queue()
     buffer_lock = multiprocessing.Lock()
-
+    inventory.append("hammer")
     #start doa
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
     doa_matrix = subprocess.Popen(["./matrix-odas", ">", "/dev/null/", "2>&1"])
@@ -137,12 +137,15 @@ def init():
 
 def wakeword_detected():
     global request_needed
+    global snowboy
     '''
     get doa angle
     '''
     print("wakeword detected")
-    request_needed.value = False
-
+    request_needed.value = True
+    snowboy.terminate()
+    while True:
+        time.sleep(50)
 
 def listen_wake_word():
     global snowboy
@@ -211,15 +214,16 @@ def record_speech():
     global request_needed
     global request_text
     # stop snowboy
-    snowboy.terminate()
+    #snowboy.terminate()
     print("killed snowboy, listening...\n")
     #tts(request_text)
     wakeword_process.terminate()
     wakeword_process.join()
-#    subprocess.call(["killall", "arecord"])
+    subprocess.call(["killall", "arecord"])
     time.sleep(0.1)
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
-    #doa_restart()
+    transcribe_file("recording.wav")
+#doa_restart()
     request_needed.value = False
     wakeword_process = multiprocessing.Process(target=listen_wake_word)
     wakeword_process.start()
