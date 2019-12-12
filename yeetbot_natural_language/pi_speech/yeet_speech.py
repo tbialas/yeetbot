@@ -1,9 +1,11 @@
 #!/usr/bin/env python
-
+import sys
+sys.path.append("./snowboy/examples/Python/")
+import snowboydecoder_arecord as snowboydecoder
 import subprocess
 import signal
 import io
-import sys
+#import sys
 import os
 import serial
 import multiprocessing
@@ -25,6 +27,8 @@ RECEIVING_TOOL_LATE = 4
 GIVING_TOOL = 5
 TRAVELLING = 6
 
+snowboy = None
+
 def init():
     global computer
     global buffer_lock
@@ -41,7 +45,7 @@ def init():
     global request_text
 
     subprocess.call(["killall", "odaslive"])
-    subprocess.call(["killall", "matrix-odas"])
+    #subprocess.call(["killall", "matrix-odas"])
 
     request_text = "What can yeetbot for you?"
 
@@ -97,7 +101,14 @@ def init():
         
     request_needed = multiprocessing.Value(c_bool, False)
     snowboy_lock = multiprocessing.Lock()
-    start_wake_word()
+    
+    
+
+    wakeword_process = multiprocessing.Process(target=listen_wake_word)
+    wakeword_process.start()
+
+    
+    #start_wake_word()
     
     tts("yeetbot 3000, online")
 
@@ -115,32 +126,44 @@ def listen_serial(queue):
         except:
             time.sleep(0.1)
 
-def start_wake_word():
-    global snowboy
-    global wakeword_process
-    
-    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
-    snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"])
-    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
-    
-    wakeword_process = multiprocessing.Process(target=listen_wake_word)
-    wakeword_process.start()
+#def start_wake_word():
+#    global snowboy
+#    global wakeword_process
+#    
+#
+#    
+#    print("snowboy started")
+#    #os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/")
+#    #snowboy = subprocess.Popen(["python", "demo_arecord.py", "resources/models/snowboy.umdl"])
+#    #os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+#    
+
+
+def wakeword_detected():
+    '''
+    get doa angle
+    '''
+    print("wakeword detected")
+
 
 def listen_wake_word():
     global snowboy
     global request_needed
     
-    while True:
-        time.sleep(0.25)
-        with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
-            if f.read() == "1" and state.value == IDLE:
-                doa_restart()
-                time.sleep(0.1)
-                request_needed.value = True
-        if request_needed.value:
-            time.sleep(1)
-            with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
-                f.write("0")
+    snowboy = snowboydecoder.HotwordDetector("snowboy/examples/Python/resources/models/snowboy.umdl", sensitivity=0.5)
+    print("starting thread snowboy")
+    snowboy.start(detected_callback=wakeword_detected, sleep_time=0.25)
+    #while True:
+    #    time.sleep(0.25)
+    #    with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "r") as f:
+    #        if f.read() == "1" and state.value == IDLE:
+    #            doa_restart()
+    #            time.sleep(0.1)
+    #            request_needed.value = True
+     ##   if request_needed.value:
+     #       time.sleep(1)
+     #       with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/snowboy/examples/Python/detected.txt", "w") as f:
+     #           f.write("0")
 
 def read_ros_buffer(queue):
     global ros_buffer
@@ -201,16 +224,19 @@ def record_speech():
     global request_needed
     global request_text
 
+
+    # stop snowboy
+    snowboy.terminate()
     print("listening...\n")
     tts(request_text)
-    snowboy.send_signal(signal.SIGINT)
     wakeword_process.terminate()
     wakeword_process.join()
-    subprocess.call(["killall", "arecord"])
+#    subprocess.call(["killall", "arecord"])
     time.sleep(0.1)
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
     doa_restart()
     request_needed.value = False
+
     start_wake_word()    
 
 def tts(text):
