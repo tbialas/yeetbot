@@ -19,7 +19,7 @@
     </node>	
     <node pkg="p2os_driver" type="p2os_driver" name="p2os_driver">
 		<!-- <remap from="/pose" to="/nav_msgs/Odometry" /> -->
-		<param name="~port" value="/dev/ttyUSB1" type="str"/>
+		<param name="~port" value="/dev/ttyUSB0" type="str"/>
 		<param name="~pulse" value="1.0"/>
  	</node>
     

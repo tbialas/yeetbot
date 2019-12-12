@@ -1,4 +1,5 @@
 from math import sqrt, cos, sin, acos, atan2
+import random
 
 import rospy
 
@@ -38,7 +39,7 @@ class Idle(State):
         publish_state_update(YEETBotState.IDLE)
 
         speech_msg = String()
-        speech_msg.data = "Hello, I am YEETBot3000!\n\nTo get my attention, just wave and say \"YEETBot3000\".\n\nHow can I help you today?"
+        speech_msg.data = "Hello, I am yeetbot3000!\n\nTo get my attention, just wave and say \"Snow Boi\".\n\nHow can I help you today?"
         text_msg_pub.publish(speech_msg)
 
         user_interface.idle_screen_choices()
@@ -83,9 +84,14 @@ class Travelling(State):
         dx = target_pose.pose.position.x - self.current_goal.pose.position.x
         dy = target_pose.pose.position.y - self.current_goal.pose.position.y
         return sqrt(dx*dx + dy*dy)
+    
+    def yaw_diff(self, target_pose):
+        curr_yaw = 2 * acos(self.current_goal.pose.orientation.w)
+        new_yaw = 2 * acos(target_pose.pose.orientation.w)
+        return abs(new_yaw - curr_yaw)
 
     def run(self):
-        if self.goal_distance(self.new_goal) >= 2:
+        if self.goal_distance(self.new_goal) >= 0.5 or self.yaw_diff(self.new_goal) >= 0.2:
             self.current_goal = self.new_goal
             nav_interface.goto_pos(self.current_goal)
 
@@ -139,6 +145,7 @@ class VerifyRequest(State):
                 raise NotImplementedError
 
         if self.request_type != 'lend' and self.request_type != 'return':
+            speech_msg = String()
             if input_array['request'] == 'lend':
                 self.request_type = 'lend'
                 speech_msg.data = "Which tool would you like to borrow?"
@@ -147,6 +154,7 @@ class VerifyRequest(State):
                 self.request_type = 'return'
                 speech_msg.data = "Which tool would you like to return?"
                 user_interface.return_choices()
+            text_msg_pub.publish(speech_msg)
         return self
 
 
@@ -200,7 +208,11 @@ class LendTool(State):
 class ReturnTool(State):
     def __init__(self):
         # TODO: Check whether the tool is early or on time
-        publish_state_update(YEETBotState.RECEIVING_TOOL_ON_TIME)
+        rand = random.choice([0, 1, 2])
+        if rand == 0:
+            publish_state_update(YEETBotState.RECEIVING_TOOL_EARLY)
+        else:
+            publish_state_update(YEETBotState.RECEIVING_TOOL_ON_TIME)
 
         user_interface.reset()
 
@@ -259,6 +271,7 @@ class ForceReturn(Travelling):
 
         speech_msg = String()
         speech_msg.data = "I am looking for my " + self.tool + ". Please return it to me."
+        user_interface.return_choices()
         text_msg_pub.publish(speech_msg)
 
     def run(self):
@@ -335,6 +348,7 @@ class LowVoltage(ReturnHome):
 class TravelToRequest(Travelling):
     def __init__(self):
         (target, self.id) = self.calculate_target_pose()
+        rospy.logerr(target)
         super(TravelToRequest, self).__init__(goal=target)
 
         speech_msg = String()
@@ -369,6 +383,7 @@ class TravelToRequest(Travelling):
         target = None
         # Assume all human poses are in the map frame ( ? )
         for human in tracker_interface.humans:
+            rospy.logerr("Human")
             hx = human.pose.position.x
             hy = human.pose.position.y
             
@@ -407,6 +422,7 @@ class TravelToRequest(Travelling):
             pose.header.frame_id = 'map'
             return (pose, human.id)
         else:
+            rospy.logwarn("No humans found!")
             pose = PoseStamped()
             pose.pose.position.x = HOME_X
             pose.pose.position.y = HOME_Y
@@ -425,6 +441,7 @@ class TravelToRequest(Travelling):
             # If the human is dead they might have simply been reassigned
             # an ID by the tracker, so we just continue on the current
             # heading
+            self.calculate_new_goal_orientation()
             super(TravelToRequest, self).run()
             return "TravelToRequest"
         try:
@@ -441,14 +458,33 @@ class TravelToRequest(Travelling):
         dy = human_pose.position.y - trans[1]
         theta = atan2(dy, dx)
         pose = PoseStamped()
-        pose.position = human_pose.position
-        pose.orientation.w = cos(theta/2)
-        pose.orientation.z = sin(theta/2)
+        pose.pose.position = human_pose.position
+        pose.pose.orientation.w = cos(theta/2)
+        pose.pose.orientation.z = sin(theta/2)
         pose.header.frame_id = 'map'
         pose.header.stamp = rospy.Time.now()
         self.new_goal = pose
+        self.calculate_new_goal_orientation()
         super(TravelToRequest, self).run()
         return "TravelToRequest"
+
+    def calculate_new_goal_orientation(self):
+        # Get out position in the map frame
+        try:
+            (trans, rot) = tf_listener.lookupTransform(
+                'base_link', 'map', rospy.Time(0))
+        except (tf.LookupException, tf.ConnectivityException, 
+                tf.ExtrapolationException):
+            rospy.logerr("Failed to get pose of robot in map frame...")
+            return
+
+        dx = self.new_goal.pose.position.x - trans[0]
+        dy = self.new_goal.pose.position.y - trans[1]
+
+        yaw = atan2(dy, dx)
+
+        self.new_goal.pose.orientation.z = sin(yaw / 2)
+        self.new_goal.pose.orientation.w = cos(yaw / 2)
 
     def next(self, input_array):
         return super(TravelToRequest, self).next(input_array)
