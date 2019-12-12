@@ -106,7 +106,7 @@ def init():
     wakeword_process.start()    
     #start_wake_word()
     
-    tts("yeetbot 3000, online")
+    #tts("yeetbot 3000, online")
 
 #def listen_serial(queue):
 #    while True:
@@ -213,13 +213,13 @@ def record_speech():
     # stop snowboy
     snowboy.terminate()
     print("killed snowboy, listening...\n")
-    tts(request_text)
+    #tts(request_text)
     wakeword_process.terminate()
     wakeword_process.join()
 #    subprocess.call(["killall", "arecord"])
     time.sleep(0.1)
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
-    doa_restart()
+    #doa_restart()
     request_needed.value = False
     wakeword_process = multiprocessing.Process(target=listen_wake_word)
     wakeword_process.start()
