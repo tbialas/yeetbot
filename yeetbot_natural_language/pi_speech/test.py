@@ -140,10 +140,12 @@ def listen_serial(queue):
 
 
 def wakeword_detected():
+    global request_needed
     '''
     get doa angle
     '''
     print("wakeword detected")
+    request_needed.value = False
 
 
 def listen_wake_word():
@@ -236,8 +238,8 @@ def record_speech():
     subprocess.call(["arecord", "recording.wav", "-f", "S16_LE", "-r", "44100", "-d", "4", "-D", "hw:2,0"])
     doa_restart()
     request_needed.value = False
-
-    start_wake_word()    
+    wakeword_process = multiprocessing.Process(target=listen_wake_word)
+    wakeword_process.start()
 
 def tts(text):
     print text
@@ -313,27 +315,29 @@ def main():
     
     init()
     while True:
-        if state.value == IDLE:
-            time.sleep(0.05)
-
-        elif state.value == RECEIVING_REQUEST:
-            if request_needed.value:
-                record_speech()
-            else:
-                time.sleep(0.05)
-
-        elif state.value == RECEIVING_TOOL_EARLY:
-            time.sleep(0.05)
-        elif state.value == RECEIVING_TOOL_LATE:
-            time.sleep(0.05)
-        elif state.value == RECEIVING_TOOL_ON_TIME:
-            time.sleep(0.05)
-        elif state.value == GIVING_TOOL:
-            time.sleep(0.05)
-        elif state.value == TRAVELLING:
-            time.sleep(0.05)
+        if not wakeword_detected.value:
+            time.sleep(0.3)
         else:
-            time.sleep(0.05)
+            record_speech()
+        #if state.value == IDLE:
+        #    time.sleep(0.05)
+        #elif state.value == RECEIVING_REQUEST:
+        #    if request_needed.value:
+        #        record_speech()
+        #    else:
+        #        time.sleep(0.05)
+        #elif state.value == RECEIVING_TOOL_EARLY:
+        #    time.sleep(0.05)
+        #elif state.value == RECEIVING_TOOL_LATE:
+        #    time.sleep(0.05)
+        #elif state.value == RECEIVING_TOOL_ON_TIME:
+        #    time.sleep(0.05)
+        #elif state.value == GIVING_TOOL:
+        #    time.sleep(0.05)
+        #elif state.value == TRAVELLING:
+        #    time.sleep(0.05)
+        #else:
+        #    time.sleep(0.05)
 
 if __name__ == '__main__':
     main()
