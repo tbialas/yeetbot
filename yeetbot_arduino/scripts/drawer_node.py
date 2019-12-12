@@ -40,6 +40,8 @@ import rospy
 import serial
 import time
 
+from threading import Lock
+
 from std_msgs.msg import String
 from yeetbot_msgs.msg import YEETBotDrawerStates, YEETBotItemStates
 
@@ -57,6 +59,8 @@ DASH = [0,0,0,0]
 max_count = 7;
 count = 0;
 
+lock = Lock()
+
 #1-plier
 #2-caliper
 #3-screwdriver
@@ -68,15 +72,18 @@ def callback(drawer_states_msg):
         command = ">1o<"
     else:
         command = ">1c<"
-    arduino.write(command)
+    with lock:
+        arduino.write(command)
     print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
+    rospy.sleep(0.2)
     
     if drawer_states_msg.screw_driver_drawer:
         command = ">3o<"
     else:
         command = ">3c<"
-    arduino.write(command)
+    with lock:
+        arduino.write(command)
     print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
     
@@ -87,14 +94,17 @@ def callback(drawer_states_msg):
 #    arduino.write(command)
     #print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
+    rospy.sleep(0.2)
       
     if drawer_states_msg.vernier_caliper_drawer:
         command = ">2o<"
     else:
         command = ">2c<"
-    arduino.write(command)
+    with lock:
+        arduino.write(command)
     print (command)
     #arduino.read_until("<") #Don't do anything with this info for now
+    rospy.sleep(0.2)
     
         
 
@@ -173,9 +183,6 @@ def talker():
             DENOISED_ITEM_STATES[num] = item
         DASH = [0,0,0,0]
 
-        print DENOISED_ITEM_STATES
-        print OLD_ITEM_STATES_ARR
-        
         if OLD_DRAWER_STATES != DRAWER_STATES:
             OLD_DRAWER_STATES = DRAWER_STATES
             drawer_msg.plier_drawer = DRAWER_STATES[0]
@@ -211,40 +218,44 @@ def talker():
 
 
 def getStates():
-    temp_states = [[0,0,0,0],[0,0,0,0]]
-    arduino.write(">1i<")
-    #cmd = arduino.read_until("<")
-    cmd = arduino.read_until("<").strip()
-    print cmd
-    temp_states[0][0] = int(cmd[2]) #set drawer status of 1st drawer to the 2nd char of the reply
-    temp_states[1][0] = int(cmd[3]) #set item status of 1st drawer to the 3rd char of the reply
-    
-    arduino.write(">2i<")
-    #cmd = arduino.read_until("<")
-    cmd = arduino.read_until("<").strip()
-    print cmd
-    temp_states[0][1] = int(cmd[2]) #set drawer status of 2nd drawer to the 2nd char of the reply
-    temp_states[1][1] = int(cmd[3]) #set item status of 2nd drawer to the 3rd char of the reply
-    
-    arduino.write(">3i<")
-    #cmd = arduino.read_until("<")
-    cmd = arduino.read_until("<").strip()
-    print cmd
-    temp_states[0][2] = int(cmd[2]) #set drawer status of 3rd drawer to the 2nd char of the reply
-    temp_states[1][2] = int(cmd[3]) #set item status of 3rd drawer to the 3rd char of the reply
-    
-    #arduino.write(">4i<")
-    #cmd = arduino.read_until("<")
-    #cmd = arduino.read_until("<").strip()
-    #print cmd
-    #temp_states[0][3] = int(cmd[2]) #set drawer status of 4th drawer to the 2nd char of the reply
-    #temp_states[1][3] = int(cmd[3]) #set item status of 4th drawer to the 3rd char of the reply
+    with lock:
+        temp_states = [[0,0,0,0],[0,0,0,0]]
+        arduino.write(">1i<")
+        #cmd = arduino.read_until("<")
+        print "cmd:"
+        cmd = arduino.read_until("<").strip()
+        print cmd
+        temp_states[0][0] = int(cmd[2]) #set drawer status of 1st drawer to the 2nd char of the reply
+        temp_states[1][0] = int(cmd[3]) #set item status of 1st drawer to the 3rd char of the reply
+        
+        arduino.write(">2i<")
+        #cmd = arduino.read_until("<")
+        print "cmd:"
+        cmd = arduino.read_until("<").strip()
+        print cmd
+        temp_states[0][1] = int(cmd[2]) #set drawer status of 2nd drawer to the 2nd char of the reply
+        temp_states[1][1] = int(cmd[3]) #set item status of 2nd drawer to the 3rd char of the reply
+        
+        arduino.write(">3i<")
+        #cmd = arduino.read_until("<")
+        cmd = arduino.read_until("<").strip()
+        print "cmd:"
+        print cmd
+        temp_states[0][2] = int(cmd[2]) #set drawer status of 3rd drawer to the 2nd char of the reply
+        temp_states[1][2] = int(cmd[3]) #set item status of 3rd drawer to the 3rd char of the reply
+        
+        #arduino.write(">4i<")
+        #cmd = arduino.read_until("<")
+        #cmd = arduino.read_until("<").strip()
+        #print cmd
+        #temp_states[0][3] = int(cmd[2]) #set drawer status of 4th drawer to the 2nd char of the reply
+        #temp_states[1][3] = int(cmd[3]) #set item status of 4th drawer to the 3rd char of the reply
 
-    # We aren't using the 4th drawer
-    temp_states[0][3] = 0
-    temp_states[1][3] = 0
-    
-    return temp_states
+        # We aren't using the 4th drawer
+        temp_states[0][3] = 0
+        temp_states[1][3] = 0
+        
+        return temp_states
     
 
 if __name__ == '__main__':
