@@ -3,8 +3,12 @@
 import serial
 import time
 import rospy
+from collections import deque
 from std_msgs.msg import String, Float64
 from yeetbot_msgs.msg import YEETBotUserResponse, YEETBotUserChoices, YEETBotState
+
+BUF_LEN = 100
+DOA_NUM = 60
 
 def init():
     global pub_response
@@ -62,6 +66,7 @@ def main():
     print "Setting up..."
     init()
     print "Setup completed"
+    doa_buf = deque(maxlen=BUF_LEN)
     while not rospy.is_shutdown():
         cmd = pi.read_until("<")
         if cmd:
@@ -78,14 +83,24 @@ def main():
             #doa
             elif topic == ">a/":
                 msg = float(serial_info)
-                pub_doa.publish(msg)
-                rospy.loginfo(msg)
+                doa_buf.append(msg)
                 
             #state
             elif topic == ">s/":
                 msg = YEETBotState()
                 msg.current_state = int(msg)
                 pub_state.publish(msg)
+                rospy.loginfo(msg)
+
+            #detect wakeword
+            elif topic == ">d/":
+                doa = 0
+                x = 0
+                for x in range(DOA_NUM):
+                    doa += doa_buf.pop()
+                doa /= DOA_NUM
+                #publish doa
+                pub_doa.publish(msg)
                 rospy.loginfo(msg)
 
     pi.write("quit")
