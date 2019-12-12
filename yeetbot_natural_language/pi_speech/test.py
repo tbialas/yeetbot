@@ -19,8 +19,6 @@ from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
-ANGLE_ELEMENT_NUM = 90
-DOA_BUFFER_SIZE = 100
 IDLE = 0
 RECEIVING_REQUEST = 1
 RECEIVING_TOOL_EARLY = 2
@@ -46,7 +44,6 @@ def init():
     global ros_buffer
     global request_text
     global wakeword_process
-    global doa_buffer
 
     subprocess.call(["killall", "odaslive"])
     #subprocess.call(["killall", "matrix-odas"])
@@ -83,12 +80,11 @@ def init():
     state = multiprocessing.Value('i', IDLE)
     inventory = manager.list()
     ros_buffer = multiprocessing.Queue()
-    doa_buffer = multiprocessing.Queue()
     buffer_lock = multiprocessing.Lock()
     inventory.append("hammer")
     #start doa
     doa_process = multiprocessing.Process(target=listen_matrix)
-
+    doa_process.start()
     #initialise thread for listening to computer and reading buffer and wakeword
     #port = multiprocessing.Process(target=listen_serial, args=(ros_buffer,))
     #port.start()
@@ -136,23 +132,19 @@ def init():
 #    
 
 def listen_matrix():
-    global doa_buffer
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
-    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_matrix = subprocess.Popen(["./matrix-odas"], stdout=subprocess.PIPE)
     doa_odas = subprocess.Popen(["./odaslive", "-c", "../config/matrix-demo/matrix_voice.cfg"])
     os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 
     offset=4
     while True:
-        time.sleep(0.05)
         output = doa_matrix.stdout.readline()
         offset += 1
         if offset == 9:
             output = json.loads(output[:-2])
             angle = np.arctan2(output.get('x'), output.get('y'))
-            doa_buffer.put(angle)
-            if doa_buffer.qsize() > DOA_BUFFER_SIZE:
-                doa_buffer.get()
+            print angle
             offset -= 9
 
 def get_doa():
@@ -166,14 +158,10 @@ def get_doa():
 def wakeword_detected():
     global request_needed
     global snowboy
-    angle = get_doa()
-    print angle
     print("wakeword detected")
     request_needed.value = True
     snowboy.terminate()
-    while True:
-        time.sleep(50)
-
+    
 def listen_wake_word():
     global snowboy
     global request_needed
