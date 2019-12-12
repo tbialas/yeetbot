@@ -79,18 +79,14 @@ def main():
                 msg.invalid_choice = True if serial_info[1] == "t" else False
                 pub_response.publish(msg)
                 rospy.loginfo(msg)
-                doa = 0
-                x = 0
-                for x in range(DOA_NUM):
-                    doa += doa_buf.pop()
-                doa /= DOA_NUM
+                doa = max_doa(doa_buf)
                 #publish doa
                 pub_doa.publish(doa)
                 rospy.loginfo(doa)
                 
             #doa
             elif topic == ">a/":
-                msg = float(serial_info)
+                msg = serial_info.split(",")
                 doa_buf.append(msg)
                 
             #state
@@ -102,16 +98,21 @@ def main():
 
             #detect wakeword
             elif topic == ">d/":
-                doa = 0
-                x = 0
-                for x in range(DOA_NUM):
-                    doa += doa_buf.pop()
-                doa /= DOA_NUM
+                doa = max_doa(doa_buf)
                 #publish doa
                 pub_doa.publish(doa)
                 rospy.loginfo(doa)
 
     pi.write("quit")
+
+def max_doa(queue):
+    max_energy = 0
+    direction = 0
+    for x in queue:
+        if x[1] > max_energy:
+            max_energy = x[1]
+            direction = x[0]
+    return direction
 
 if __name__ == '__main__':
     main()

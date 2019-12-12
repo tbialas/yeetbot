@@ -47,7 +47,7 @@ from yeetbot_msgs.msg import YEETBotDrawerStates, YEETBotItemStates
 
 arduino = serial.Serial(
     port = '/dev/serial/by-id/usb-FTDI_FT232R_USB_UART_AK08KM57-if00-port0',
-    baudrate=115200, timeout = 5)
+    baudrate=115200, timeout=5)
 STATES = [[0,0,0,0],[0,0,0,0]]    
 OLD_DRAWER_STATES = [0,0,0,0]
 OLD_ITEM_STATES = [1,1,1,1]
@@ -56,7 +56,7 @@ DENOISED_ITEM_STATES = [0,0,0,0]
 OLD_DENOISED_ITEM_STATES = [1,1,1,1]
 OLD_ITEM_STATES_ARR = [[],[],[],[]]
 DASH = [0,0,0,0]
-max_count = 7;
+max_count = 2;
 count = 0;
 
 lock = Lock()
@@ -64,6 +64,10 @@ lock = Lock()
 #1-plier
 #2-caliper
 #3-screwdriver
+
+
+class TimeoutError(Exception):
+    pass
 
 
 def callback(drawer_states_msg):
@@ -164,7 +168,10 @@ def talker():
     
     while not rospy.is_shutdown():
 
-        STATES = getStates()
+        try:
+            STATES = getStates()
+        except TimeoutError:
+            continue
         DRAWER_STATES = STATES[0]
         ITEM_STATES = STATES[1]
 
@@ -222,22 +229,28 @@ def getStates():
         temp_states = [[0,0,0,0],[0,0,0,0]]
         arduino.write(">1i<")
         #cmd = arduino.read_until("<")
-        print "cmd:"
         cmd = arduino.read_until("<").strip()
+        if cmd == "":
+            raise TimeoutError
+        print "cmd:"
         print cmd
         temp_states[0][0] = int(cmd[2]) #set drawer status of 1st drawer to the 2nd char of the reply
         temp_states[1][0] = int(cmd[3]) #set item status of 1st drawer to the 3rd char of the reply
         
         arduino.write(">2i<")
         #cmd = arduino.read_until("<")
-        print "cmd:"
         cmd = arduino.read_until("<").strip()
+        if cmd == "":
+            raise TimeoutError
+        print "cmd:"
         print cmd
         temp_states[0][1] = int(cmd[2]) #set drawer status of 2nd drawer to the 2nd char of the reply
         temp_states[1][1] = int(cmd[3]) #set item status of 2nd drawer to the 3rd char of the reply
         
         arduino.write(">3i<")
         #cmd = arduino.read_until("<")
+        if cmd == "":
+            raise TimeoutError
         cmd = arduino.read_until("<").strip()
         print "cmd:"
         print cmd
