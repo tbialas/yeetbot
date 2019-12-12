@@ -79,6 +79,14 @@ def main():
                 msg.invalid_choice = True if serial_info[1] == "t" else False
                 pub_response.publish(msg)
                 rospy.loginfo(msg)
+                doa = 0
+                x = 0
+                for x in range(DOA_NUM):
+                    doa += doa_buf.pop()
+                doa /= DOA_NUM
+                #publish doa
+                pub_doa.publish(doa)
+                rospy.loginfo(doa)
                 
             #doa
             elif topic == ">a/":
@@ -100,8 +108,8 @@ def main():
                     doa += doa_buf.pop()
                 doa /= DOA_NUM
                 #publish doa
-                pub_doa.publish(msg)
-                rospy.loginfo(msg)
+                pub_doa.publish(doa)
+                rospy.loginfo(doa)
 
     pi.write("quit")
 
