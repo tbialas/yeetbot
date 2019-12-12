@@ -5,7 +5,8 @@ import snowboydecoder_arecord as snowboydecoder
 import subprocess
 import signal
 import io
-#import sys
+import json
+import numpy as np
 import os
 import serial
 import multiprocessing
@@ -18,7 +19,8 @@ from google.cloud import texttospeech
 from google.cloud.speech import enums
 from google.cloud.speech import types
 
-ANGLE_ELEMENT_NUM = 10
+ANGLE_ELEMENT_NUM = 90
+DOA_BUFFER_SIZE = 100
 IDLE = 0
 RECEIVING_REQUEST = 1
 RECEIVING_TOOL_EARLY = 2
@@ -44,6 +46,7 @@ def init():
     global ros_buffer
     global request_text
     global wakeword_process
+    global doa_buffer
 
     subprocess.call(["killall", "odaslive"])
     #subprocess.call(["killall", "matrix-odas"])
@@ -80,13 +83,11 @@ def init():
     state = multiprocessing.Value('i', IDLE)
     inventory = manager.list()
     ros_buffer = multiprocessing.Queue()
+    doa_buffer = multiprocessing.Queue()
     buffer_lock = multiprocessing.Lock()
     inventory.append("hammer")
     #start doa
-    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
-    doa_matrix = subprocess.Popen(["./matrix-odas", ">", "/dev/null/", "2>&1"])
-    doa_odas = subprocess.Popen(["./odaslive", "-vc", "../config/matrix-demo/matrix_voice.cfg", ">", "/dev/null/", "2>&1"])
-    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+    doa_process = multiprocessing.Process(target=listen_matrix)
 
     #initialise thread for listening to computer and reading buffer and wakeword
     #port = multiprocessing.Process(target=listen_serial, args=(ros_buffer,))
@@ -134,13 +135,39 @@ def init():
 #    #os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
 #    
 
+def listen_matrix():
+    global doa_buffer
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/")
+    doa_matrix = subprocess.Popen(["./matrix-odas"])
+    doa_odas = subprocess.Popen(["./odaslive", "-c", "../config/matrix-demo/matrix_voice.cfg"])
+    os.chdir("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/")
+
+    offset=4
+    while True:
+        time.sleep(0.05)
+        output = doa_matrix.stdout.readline()
+        offset += 1
+        if offset == 9:
+            output = json.loads(output[:-2])
+            angle = np.arctan2(output.get('x'), output.get('y'))
+            doa_buffer.put(angle)
+            if doa_buffer.qsize() > DOA_BUFFER_SIZE:
+                doa_buffer.get()
+            offset -= 9
+
+def get_doa():
+    global doa_buffer
+    with buffer_lock:
+        while range(ANGLE_ELEMENT_NUM):
+            doa_buffer.get()
+        return doa_buffer.get()
+
 
 def wakeword_detected():
     global request_needed
     global snowboy
-    '''
-    get doa angle
-    '''
+    angle = get_doa()
+    print angle
     print("wakeword detected")
     request_needed.value = True
     snowboy.terminate()
@@ -192,11 +219,6 @@ def listen_wake_word():
 #    #make yeetbot speak
 #    elif topic == ">m/":
 #        tts(msg)
-
-def deg2rad_mode(angle_list):
-    doa = int(max(set(angle_list), key=angle_list.count))
-    print doa
-    return str(round(math.radians(doa), 2))
 
 #def send_doa():
 #    with open("/home/pi/yeetbot/yeetbot_natural_language/pi_speech/odas/bin/angles.txt") as f:
