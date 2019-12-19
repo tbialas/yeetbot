@@ -6,7 +6,7 @@ Github repository for our group for the 4th year Human Centred Robotics course a
 ### Team Members
 - Tomasz Białas (tjb16)
 - Nick Hafner (nrh16)
-- Ben Mark (bb2515)
+- Ben Biggs (bb2515)
 - Tom Poskitt (tjp16)
 - Archit Sharma (as10216)
 - Sergey Zhelyabovskiy (sz4316)
@@ -25,6 +25,7 @@ Required Software:
  - [freenect_launch](http://wiki.ros.org/freenect_launch)
  - [tensorflow](https://www.tensorflow.org/)
  - [opencv](https://opencv.org/)
+ - [ROS Navigation Stack](http://wiki.ros.org/navigation)
 
 (ROS dependencies can be installed via `rosdep install --from-path src --ignore-src -r -y` when run from the root of your catkin workspace)
 
