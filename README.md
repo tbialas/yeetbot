@@ -36,6 +36,7 @@ Required Software:
 #### yeetbot_arduino 
 - contains the script running on the Arduino that controls the operation of the drawers and detection of the RFID tags. 
 - contains a node that communicates via serial with the arduino and publishes the drawer information (read by the controller).
+- contains PB gerber and circuit diagram files for the set of drawers.
 
 #### yeetbot_bringup
 - contains the launch files to be run on all the computers integrated in YEETBot's ROS network.
